@@ -35,6 +35,26 @@
     }
     return errs
   }
-  // object handled in the next commit.
+  if kind == "object" {
+    if type(value) != dictionary {
+      return ((
+        path: path,
+        message: "expected object, got " + repr(type(value)) + ".",
+      ),)
+    }
+    let errs = ()
+    let valid-keys = schema.shape.keys()
+    for (key, sub-value) in value.pairs() {
+      if key in schema.shape {
+        errs += _validate(schema.shape.at(key), sub-value, path + (key,))
+      } else {
+        errs += ((
+          path: path + (key,),
+          message: "unknown key \"" + key + "\". Valid keys: " + valid-keys.join(", ") + ".",
+        ),)
+      }
+    }
+    return errs
+  }
   return ()
 }
