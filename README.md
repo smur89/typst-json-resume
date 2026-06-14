@@ -1,13 +1,23 @@
-# json-resume
+<h1 align="center">json-resume</h1>
 
-[![Build](https://github.com/smur89/typst-json-resume/actions/workflows/build.yml/badge.svg)](https://github.com/smur89/typst-json-resume/actions/workflows/build.yml)
-[![License](https://img.shields.io/github/license/smur89/typst-json-resume)](LICENSE)
+<p align="center">
+  <a href="https://typst.app/universe/package/json-resume"><img alt="json-resume on Typst Universe" src="https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Ftypst.app%2Funiverse%2Fpackage%2Fjson-resume&query=%2Fhtml%2Fbody%2Fdiv%2Fmain%2Fdiv%5B2%5D%2Faside%2Fsection%5B2%5D%2Fdl%2Fdd%5B3%5D&logo=typst&label=Universe&color=%23239DAE&style=flat-square"></a>
+  <a href="https://github.com/smur89/typst-json-resume/releases"><img alt="Latest GitHub release version of json-resume" src="https://img.shields.io/github/v/release/smur89/typst-json-resume?style=flat-square"></a>
+  <a href="https://github.com/smur89/typst-json-resume/actions/workflows/build.yml"><img alt="GitHub Actions build workflow status on the json-resume main branch" src="https://img.shields.io/github/actions/workflow/status/smur89/typst-json-resume/build.yml?style=flat-square"></a>
+  <a href="LICENSE"><img alt="MIT license badge linking to the json-resume LICENSE file" src="https://img.shields.io/github/license/smur89/typst-json-resume?style=flat-square"></a>
+  <a href="https://github.com/smur89/typst-json-resume/stargazers"><img alt="Number of GitHub stargazers for json-resume" src="https://img.shields.io/github/stars/smur89/typst-json-resume?style=flat-square"></a>
+</p>
+
+<p align="center">
+  Strict <a href="https://jsonresume.org/">JSON Resume</a> loader for Typst — validate a canonical <code>resume.json</code> against the <a href="https://jsonresume.org/schema">published schema</a>, then hand the normalised dict to any compatible CV template.
+</p>
 
 [JSON Resume](https://jsonresume.org/) is a portable JSON-based resume format —
 one `resume.json` file rendered by many themes across many output formats.
 This package brings that ecosystem to Typst: load and validate a canonical
 `resume.json`, then hand the normalised dict to any compatible Typst CV
-template. Strict to the published [schema](https://jsonresume.org/schema):
+template. Strict to the published [schema](https://jsonresume.org/schema)
+(canonical source at [jsonresume/resume-schema](https://github.com/jsonresume/resume-schema/blob/master/schema.json)):
 unknown fields are rejected, free-text fields are coerced to Typst `content`,
 and renderer-specific extensions belong in the consuming template — not here.
 
