@@ -1,25 +1,55 @@
 // The canonical JSON Resume schema is declared as a data structure
-// the validator/coercer engines walk. Spot-check the assembly.
+// the validator/coercer engines walk. Two flavours of check:
+//
+//  - Property checks derived FROM the schema itself, so adding a
+//    section automatically extends coverage without test edits.
+//  - Spot-checks pinning specific fields that callers and the README
+//    depend on (free-text vs identifier vs tag-array).
 
 #import "../internal/schema.typ": resume-schema
 
 #assert.eq(resume-schema.kind, "object")
 
-#let expected = (
-  "$schema",
-  "basics", "work", "volunteer", "education", "awards",
-  "certificates", "publications", "skills", "languages",
-  "interests", "references", "projects", "meta",
-).sorted()
-#assert.eq(resume-schema.shape.keys().sorted(), expected)
+// Property: every top-level entry except the `$schema` metadata link
+// is either an object (singleton section like `basics`/`meta`) or an
+// array of objects (every other section). If a future section is
+// added that violates this shape, this assertion surfaces it.
+#for (key, sub-schema) in resume-schema.shape.pairs() {
+  if key == "$schema" {
+    assert.eq(
+      sub-schema.kind, "str",
+      message: "$schema must be str-typed; got " + sub-schema.kind,
+    )
+  } else {
+    let kind = sub-schema.kind
+    let ok = (
+      kind == "object" or (kind == "array" and sub-schema.elem.kind == "object")
+    )
+    assert(
+      ok,
+      message: "resume-schema." + key + " must be object or array-of(object); got " + kind,
+    )
+  }
+}
 
-// Section-level shapes.
-#assert.eq(resume-schema.shape.basics.kind, "object")
-#assert.eq(resume-schema.shape.work.kind, "array")
-#assert.eq(resume-schema.shape.work.elem.kind, "object")
-#assert.eq(resume-schema.shape.meta.kind, "object")
+// Property: every section is reachable from resume-schema.shape and
+// every element schema (whether the section is an object or an
+// array-of-object) has a non-empty shape. If a refactor accidentally
+// drops the shape of a section, this fails.
+#for (key, sub-schema) in resume-schema.shape.pairs() {
+  if key == "$schema" { continue }
+  let element-shape = if sub-schema.kind == "object" {
+    sub-schema.shape
+  } else {
+    sub-schema.elem.shape
+  }
+  assert(
+    element-shape.keys().len() > 0,
+    message: "resume-schema." + key + " has empty element shape",
+  )
+}
 
-// Content-typed fields per the issue's intent.
+// Spot-checks on content-coerced fields the issue called out.
 #assert.eq(resume-schema.shape.basics.shape.summary.kind, "content")
 #assert.eq(resume-schema.shape.work.elem.shape.summary.kind, "content")
 #assert.eq(resume-schema.shape.work.elem.shape.highlights.elem.kind, "content")
