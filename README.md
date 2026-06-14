@@ -12,20 +12,22 @@ template, not here.
 ## Install
 
 ```typst
-#import "@preview/json-resume:0.0.1": read-resume, validate-resume, coerce-resume, parse-resume
+#import "@preview/json-resume:0.0.1": validate-resume, coerce-resume, parse-resume
 ```
 
 ## Usage
 
-The loader is a three-step pipeline you can run end-to-end with `parse-resume`
-or step through individually:
+`parse-resume` is the one-call entry point. It accepts either a parsed dict
+or a Typst-root-relative path string:
 
 ```typst
 #import "@preview/json-resume:0.0.1": parse-resume
 
-// Common case — Typst's built-in json() reads the file relative to your
-// document, parse-resume validates and coerces.
+// Path relative to your own .typ — let Typst's json() resolve it.
 #let resume = parse-resume(json("resume.json"))
+
+// Or a Typst-root-relative path string, resolved by parse-resume itself.
+#let resume = parse-resume("/resume.json")
 ```
 
 Step-by-step, if you want to handle validation errors yourself:
@@ -43,17 +45,6 @@ Step-by-step, if you want to handle validation errors yourself:
   ...
 ]
 ```
-
-`read-resume(path)` is also exported as a convenience, but Typst resolves
-paths against the file containing the call — so it requires a
-**root-relative path** (one starting with `/`):
-
-```typst
-#let resume = parse-resume(read-resume("/resume.json"))
-```
-
-For paths relative to your own document, prefer `json("…")` over
-`read-resume("/…")`.
 
 The returned dict matches the canonical JSON Resume schema, with free-text
 fields (`summary`, `description`, `highlights[]`, `reference`) coerced to

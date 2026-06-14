@@ -1,9 +1,9 @@
 // End-to-end: a fixture exercising every JSON Resume section validates
 // cleanly and coerces into the expected shape.
 
-#import "../lib.typ": read-resume, validate-resume, parse-resume
+#import "../lib.typ": validate-resume, parse-resume
 
-#let raw = read-resume("/tests/fixtures/resume_full.json")
+#let raw = json("fixtures/resume_full.json")
 
 #assert.eq(validate-resume(raw), ())
 
