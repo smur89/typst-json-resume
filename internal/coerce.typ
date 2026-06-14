@@ -8,7 +8,16 @@
   if kind == "content" {
     return [#value]
   }
-  // array + object handled in the next commit.
+  if kind == "array" {
+    return value.map(elem => _coerce(schema.elem, elem))
+  }
+  if kind == "object" {
+    let out = (:)
+    for (key, sub-value) in value.pairs() {
+      out.insert(key, _coerce(schema.shape.at(key), sub-value))
+    }
+    return out
+  }
   // str / number: identity.
   return value
 }
