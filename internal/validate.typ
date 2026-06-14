@@ -32,7 +32,7 @@
   if kind == "object" {
     if type(value) != dictionary { return _type-error(path, "object", value) }
     let valid-keys-str = schema.shape.keys().join(", ")
-    return value.pairs().map(((key, sub-value)) => {
+    let per-key-errs = value.pairs().map(((key, sub-value)) => {
       if key in schema.shape {
         _validate(schema.shape.at(key), sub-value, path + (key,))
       } else {
@@ -42,6 +42,14 @@
         ),)
       }
     }).flatten()
+    let required = schema.at("required-keys", default: ())
+    let missing-errs = required
+      .filter(k => k not in value)
+      .map(k => (
+        path: path + (k,),
+        message: "missing required key " + repr(k) + ".",
+      ))
+    return per-key-errs + missing-errs
   }
   panic("json-resume: internal — unknown schema kind " + repr(kind))
 }

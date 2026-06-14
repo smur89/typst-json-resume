@@ -8,5 +8,13 @@
 #assert.eq(array-of(str-type), (kind: "array", elem: (kind: "str")))
 #assert.eq(
   object((name: str-type, age: number-type)),
-  (kind: "object", shape: (name: (kind: "str"), age: (kind: "number"))),
+  (
+    kind: "object",
+    shape: (name: (kind: "str"), age: (kind: "number")),
+    required-keys: (),
+  ),
+)
+#assert.eq(
+  object((name: str-type), required-keys: ("name",)),
+  (kind: "object", shape: (name: (kind: "str")), required-keys: ("name",)),
 )

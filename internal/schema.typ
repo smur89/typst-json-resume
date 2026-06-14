@@ -7,7 +7,17 @@
 #let number-type  = (kind: "number")
 
 #let array-of(elem) = (kind: "array", elem: elem)
-#let object(shape)  = (kind: "object", shape: shape)
+
+// `required-keys` defaults to `()` — every key is optional. The
+// canonical JSON Resume schema treats all keys as optional, so the
+// default preserves v0.1 behaviour. Extension schemas (JSON-Resume+)
+// can declare required keys per-section; the validator emits a
+// "missing required key" error when one is absent.
+#let object(shape, required-keys: ()) = (
+  kind: "object",
+  shape: shape,
+  required-keys: required-keys,
+)
 
 // Canonical JSON Resume schema (https://jsonresume.org/schema, source
 // at https://github.com/jsonresume/resume-schema/blob/master/schema.json).
