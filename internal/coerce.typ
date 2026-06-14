@@ -1,19 +1,8 @@
-// Pure coercer. Assumes input has passed _validate against the same
-// schema. Wraps content-type strings into Typst content blocks so
-// renderers consume them positionally; everything else passes through
-// unchanged. Unknown keys in objects are silently skipped — under the
-// normal pipeline the validator has already rejected them, and when
-// coerce-resume is called directly we'd rather drop strays than emit
-// a cryptic Typst dictionary-access panic.
-//
-// Top-of-branch type checks raise a json-resume-prefixed error when
-// the value type doesn't match the schema kind, so direct callers who
-// skipped validate-resume get a friendly diagnostic on shape
-// mismatches (e.g. a string where an object was expected) instead of
-// a Typst method-resolution panic from .pairs() / .map(). Errors are
-// surfaced via `assert(false, message: …)` rather than `panic(…)` so
-// future multi-line messages render correctly (Typst's panic
-// diagnostic repr-escapes newlines; assert preserves them).
+// Assumes input has passed _validate. Unknown keys are dropped
+// silently rather than panicking; top-of-branch type checks catch
+// shape mismatches from direct callers who skipped validation.
+// assert(false, ...) over panic(...) for newline-preserving
+// diagnostics if these messages ever go multi-line.
 
 #import "errors.typ": _type-name-of
 

@@ -1,5 +1,4 @@
-// Type combinators for the JSON Resume schema. Each node carries a
-// `kind` tag so the validator and coercer engines can dispatch on
+// Each node carries a `kind` tag so the engines can dispatch on
 // structural type without ad-hoc type sniffing.
 
 #let str-type     = (kind: "str")
@@ -8,24 +7,18 @@
 
 #let array-of(elem) = (kind: "array", elem: elem)
 
-// `required-keys` defaults to `()` — every key is optional. The
-// canonical JSON Resume schema treats all keys as optional, so the
-// default preserves v0.1 behaviour. Extension schemas (JSON-Resume+)
-// can declare required keys per-section; the validator emits a
-// "missing required key" error when one is absent.
+// Default `()` preserves the canonical schema's all-optional stance.
+// Extension schemas opt in per-section; the validator emits
+// "missing required key" when an absent key is required.
 #let object(shape, required-keys: ()) = (
   kind: "object",
   shape: shape,
   required-keys: required-keys,
 )
 
-// Canonical JSON Resume schema (https://jsonresume.org/schema, source
-// at https://github.com/jsonresume/resume-schema/blob/master/schema.json).
-// All fields are optional at this level; types are checked when
-// present. Free-text fields (summary, description, highlights[],
-// reference) are typed as content-type so coerce-resume wraps them
-// for renderers. Date / URL / email format checks are deferred to a
-// later version (v0.1 = shape + types only).
+// Canonical JSON Resume schema (https://jsonresume.org/schema).
+// All fields optional, types checked when present. Format checks for
+// dates / URLs / emails are v0.2+ work.
 
 #let _location = object((
   address: str-type,

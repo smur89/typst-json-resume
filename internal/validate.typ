@@ -1,10 +1,5 @@
-// Pure validator. Returns a flat list of {path, message} records for
-// every shape/type mismatch found. Empty list = valid. Path is a tuple
-// of dict keys and array indices; rendering lives in errors.typ.
-//
-// Note: when a key is unknown, the unknown-key error is reported but
-// its subtree is not walked — the subtree's expected shape is, by
-// definition, undefined.
+// Subtrees under unknown keys are not walked — their expected shape
+// is undefined.
 
 #import "errors.typ": _type-name-of
 
@@ -35,8 +30,8 @@
       if key in schema.shape {
         _validate(schema.shape.at(key), sub-value, path + (key,))
       } else {
-        // Valid-keys list is only assembled on the unknown-key branch
-        // so the happy path skips the join.
+        // Valid-keys list only assembled on the unknown-key branch so
+        // the happy path skips the join.
         let valid-keys-str = schema.shape.keys().join(", ")
         ((
           path: path + (key,),
