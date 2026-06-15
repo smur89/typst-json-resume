@@ -49,8 +49,8 @@
       panic(
         "json-resume: parse with a string path requires the path " +
           "to start with \"/\" (resolved from the typst root). Got: " + repr(data) + ". " +
-          "To use a path relative to your own .typ file, call json() " +
-          "directly: parse(json(" + repr(data) + ")).",
+          "To use a path relative to your own .typ file, pass " +
+          "json(" + repr(data) + ") in place of the path string.",
       )
     }
     json(data)
