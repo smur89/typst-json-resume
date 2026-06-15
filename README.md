@@ -8,9 +8,7 @@
   <a href="https://github.com/smur89/typst-json-resume/stargazers"><img alt="Number of GitHub stargazers for json-resume" src="https://img.shields.io/github/stars/smur89/typst-json-resume?style=flat-square"></a>
 </p>
 
-<p align="center">
-  Strict <a href="https://jsonresume.org/">JSON Resume</a> loader for Typst — validate a canonical <code>resume.json</code> against the <a href="https://jsonresume.org/schema">published schema</a>, then hand the normalised dict to any compatible CV template.
-</p>
+Strict [JSON Resume](https://jsonresume.org/) loader for Typst — validate a canonical `resume.json` against the [published schema](https://jsonresume.org/schema), then hand the normalised dict to any compatible CV template.
 
 [JSON Resume](https://jsonresume.org/) is a portable JSON-based resume format —
 one `resume.json` file rendered by many themes across many output formats.
