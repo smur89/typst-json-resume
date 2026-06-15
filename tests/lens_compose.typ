@@ -1,7 +1,6 @@
-// `lens-then` composition concatenates paths — composing two lenses
-// produces the same lens as constructing one with the joined path.
-// Without that, "lens" would just be a fancy wrapper around dict
-// indexing.
+// Without composition `lens-then` would just be a fancy wrapper around
+// dict indexing — the test pins that composed and direct lenses are
+// observationally equivalent.
 
 #import "../lib.typ": (
   lens, lens-get, lens-put, lens-then,
@@ -13,18 +12,15 @@
 #let composed = lens-then(basics, just-email)
 #let direct = lens(("basics", "email"))
 
-// Composition is path concatenation.
 #assert.eq(composed.path, direct.path)
 #assert.eq(lens-get(composed, resume-schema), lens-get(direct, resume-schema))
 #assert.eq(lens-get(composed, resume-schema), str-type)
 
-// Put through the composed lens behaves identically to the direct one.
 #let via-composed = lens-put(composed, resume-schema, number-type)
 #let via-direct = lens-put(direct, resume-schema, number-type)
 #assert.eq(via-composed, via-direct)
 
-// Three-way composition reaches into the array-element schema via
-// "items", proving compose still works across array boundaries.
+// Compose across an object→array→object boundary via "items".
 #let work = lens(("work",))
 #let items = lens(("items",))
 #let highlights = lens(("highlights",))

@@ -1,21 +1,14 @@
-// Lens-style schema editing. A lens is a path-carrying value;
-// `lens-get` / `lens-put` / `lens-over` / `lens-then` are the
-// operations. Top-level functions rather than dict-methods because
-// Typst parses `dict.field(args)` as "method on the dict type", not
-// "call the closure stored under that field" — pulling the operations
-// out keeps call sites readable.
+// Lens-style schema editing.
+//
+// Top-level lens-* functions rather than methods on a lens record:
+// Typst parses `dict.field(args)` as a type-method lookup, not a call
+// of the closure stored under that key, so methods would force
+// `(lens.put)(args)` at every call site.
 //
 // Path segments:
 //   - object: string key into `.shape`
-//   - array : the literal "items" to enter `.elem`
-//   - empty `()` : identity lens (get returns the schema unchanged,
-//     put replaces it wholesale)
-//
-// All operations are functional — they return a NEW schema and leave
-// the input untouched. Errors at invalid paths panic with the bad
-// segment, the schema kind we were on, and the keys that would have
-// been valid, so a typo in a long path surfaces a useful diagnostic
-// instead of "key not in dict".
+//   - array : literal "items" to enter `.elem`
+//   - empty `()` : identity lens
 
 #let _bail(msg) = panic("json-resume: " + msg)
 
@@ -28,9 +21,8 @@
   }
 }
 
-// Rebuild a parent object schema with one shape key set to `value`.
-// Typst dicts are value types so `let new-shape = parent.shape` is a
-// copy; the `.insert` mutates that local without touching parent.
+// Typst dicts are value types — `let new-shape = parent.shape` copies,
+// and `.insert` mutates the local without touching parent.
 #let _with-shape-set(parent, key, value) = {
   let new-shape = parent.shape
   new-shape.insert(key, value)
@@ -68,9 +60,8 @@
   cursor
 }
 
-// Recursive walk-and-rebuild: descend one segment, recurse for the
-// rest, then re-wrap with the returned sub-value. _descend handles
-// invalid segments with the same diagnostics get uses.
+// _descend runs in both branches so an invalid segment surfaces the
+// same diagnostic from get and from put.
 #let _set-at(schema, path, value) = {
   if path.len() == 0 { return value }
   let (head, ..rest) = path
@@ -79,25 +70,20 @@
   else { (..schema, elem: new-sub) }
 }
 
-// Lens-as-value. The lens itself only carries a path; operations are
-// the top-level lens-* functions below.
 #let lens(path) = (kind: "lens", path: path)
 
 #let lens-get(l, schema) = _get-at(schema, l.path)
 
-// `lens-put` is the lens-`set` operation. Renamed because `set` is a
-// Typst keyword and can't appear as a function name in this position.
+// `put` because `set` is a Typst keyword.
 #let lens-put(l, schema, value) = _set-at(schema, l.path, value)
 
 #let lens-over(l, schema, fn) = _set-at(schema, l.path, fn(_get-at(schema, l.path)))
 
-// Composition: paths concatenate. `lens-then(a, b)` first applies a,
-// then b — the same as constructing a single lens with the joined path.
+// `lens-then(a, b)` applies a then b — paths concatenate in that order.
 #let lens-then(a, b) = lens(a.path + b.path)
 
-// Add a key to the object schema targeted by `parent-lens`. Panics if
-// the target is not an object schema, or if the key is already there
-// (additive intent — collisions would silently overwrite via lens-over).
+// Collisions panic instead of overwriting silently — for the
+// overwrite-an-existing-key case, callers can reach for lens-put / lens-over.
 #let add-field(schema, parent-lens, key, sub-schema) = lens-over(
   parent-lens,
   schema,
@@ -113,8 +99,7 @@
   },
 )
 
-// Inverse of add-field. Panics if the target is not an object or the
-// key is absent — no silent no-op, so caller typos surface.
+// Absent-key panics rather than being a silent no-op so caller typos surface.
 #let remove-field(schema, parent-lens, key) = lens-over(
   parent-lens,
   schema,

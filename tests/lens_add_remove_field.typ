@@ -1,6 +1,3 @@
-// add-field / remove-field convenience helpers operating on object
-// schemas targeted by a parent lens.
-
 #import "../lib.typ": (
   lens, add-field, remove-field, resume-schema, object,
   str-type, number-type, validate,
@@ -9,7 +6,6 @@
 #let language-items = lens(("languages", "items"))
 #let with-rating = add-field(resume-schema, language-items, "rating", number-type)
 
-// rating is now an accepted key on language entries.
 #assert("rating" in with-rating.shape.languages.elem.shape)
 #assert.eq(with-rating.shape.languages.elem.shape.rating, number-type)
 #assert.eq(
@@ -20,7 +16,6 @@
   (),
 )
 
-// Round-trip: remove the field, verify it's gone.
 #let without-rating = remove-field(with-rating, language-items, "rating")
 #assert("rating" not in without-rating.shape.languages.elem.shape)
 
@@ -35,6 +30,5 @@
 #assert.eq(loosened.required-keys, ("title",))
 #assert("body" not in loosened.shape)
 
-// Original schema unchanged after add-field / remove-field —
-// confirms the functional contract.
+// Immutability of the canonical schema after the edits above.
 #assert("rating" not in resume-schema.shape.languages.elem.shape)
