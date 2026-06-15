@@ -23,3 +23,7 @@
 #assert(src.contains("already in object shape"))
 #assert(src.contains("remove-field key "))
 #assert(src.contains("not in object shape"))
+
+// set-required's unknown-key panic uses the same _require-object
+// helper and a dedicated message — pin both pieces.
+#assert(src.contains("set-required keys not in object shape"))

@@ -99,6 +99,25 @@
   },
 )
 
+// Replace (not merge) — explicit overwrite mirrors lens-put's semantics.
+// Keys must exist in shape so a typo fails at edit time, not at validate
+// time as a phantom "missing required key" against the wrong name.
+#let set-required(schema, parent-lens, keys) = lens-over(
+  parent-lens,
+  schema,
+  parent => {
+    _require-object(parent, "set-required")
+    let unknown = keys.filter(k => k not in parent.shape)
+    if unknown.len() > 0 {
+      _bail(
+        "set-required keys not in object shape: " + unknown.join(", ") +
+          ". Valid keys: " + parent.shape.keys().join(", ") + ".",
+      )
+    }
+    (..parent, required-keys: keys)
+  },
+)
+
 // Absent-key panics rather than being a silent no-op so caller typos surface.
 #let remove-field(schema, parent-lens, key) = lens-over(
   parent-lens,
