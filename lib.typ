@@ -26,20 +26,25 @@
 
 // Generic composition. Accepts a parsed dict OR a Typst-root-relative
 // path string ("/…"); validates, aborts compilation with the combined
-// report on issues, otherwise coerces.
+// report on issues, otherwise coerces. `_caller` lets the canonical
+// wrapper substitute its own name into the panic hints so a
+// `parse-resume("relative.json")` error suggests `parse-resume(json(…))`
+// rather than the BYO `parse(schema, json(…))` form.
 //
 // String paths must start with "/" because Typst resolves relative
 // paths against the file containing the call — here that's the
 // @preview cache. For paths relative to the caller's own .typ, pass
 // `json("…")` instead.
-#let parse(schema, data) = {
+#let parse(schema, data, _caller: "parse") = {
+  let hint = if _caller == "parse" { _caller + "(schema, json(" + repr(data) + "))" }
+    else { _caller + "(json(" + repr(data) + "))" }
   let dict-data = if type(data) == str {
     if not data.starts-with("/") {
       panic(
-        "json-resume: parse with a string path requires the path " +
+        "json-resume: " + _caller + " with a string path requires the path " +
           "to start with \"/\" (resolved from the typst root). Got: " + repr(data) + ". " +
           "To use a path relative to your own .typ file, call json() " +
-          "directly: parse(schema, json(" + repr(data) + ")).",
+          "directly: " + hint + ".",
       )
     }
     json(data)
@@ -47,7 +52,7 @@
     data
   } else {
     panic(
-      "json-resume: parse expected a dict or a string path, got " +
+      "json-resume: " + _caller + " expected a dict or a string path, got " +
         repr(type(data)) + ".",
     )
   }
@@ -74,4 +79,4 @@
   coerce(resume-schema, data)
 }
 
-#let parse-resume(data) = parse(resume-schema, data)
+#let parse-resume(data) = parse(resume-schema, data, _caller: "parse-resume")

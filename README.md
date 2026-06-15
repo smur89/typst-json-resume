@@ -186,13 +186,13 @@ issues:
 
 #let raw = json("resume.json")
 #let errors = validate(altacv-schema, raw)
-#if errors.len() > 0 {
+#if errors.len() > 0 [
   // Surface them in the document, log them, render a placeholder, …
-  [Resume has #errors.len() issue(s).]
-} else {
+  Resume has #errors.len() issue(s).
+] else [
   #let model = coerce(altacv-schema, raw)
   // …
-}
+]
 ```
 
 When to reach for which API:
