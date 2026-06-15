@@ -9,9 +9,8 @@
 
 #let array-of(elem) = (kind: "array", elem: elem)
 
-// Default `()` preserves the all-optional stance. Reject required-keys
-// that don't appear in shape so a schema typo fails at construction
-// time instead of as a phantom validation error at runtime.
+// Reject required-keys that don't appear in shape so a schema typo
+// fails at construction time, not as a phantom validation error.
 #let object(shape, required-keys: ()) = {
   let unknown = required-keys.filter(k => k not in shape)
   assert(

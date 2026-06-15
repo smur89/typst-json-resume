@@ -1,20 +1,12 @@
 // Canonical JSON Resume schema (https://jsonresume.org/schema).
-//
-// Derived at module-load time from the vendored
-// fixtures/jsonresume-schema.json (pinned to upstream
-// jsonresume/resume-schema v1.0.0) so the JSON document is the single
-// source of truth. The kind/primitive constants live in kinds.typ to
-// keep this file's only job "produce resume-schema".
+// Derived from the vendored upstream document; see CONTRIBUTING for
+// the bump procedure.
 //
 // `_content-paths` is the deliberate divergence from the source: the
 // canonical schema types these free-text fields as `string`, but the
 // package wraps them in Typst `content` during coercion for ergonomic
-// inline rendering. See #32 — that override is an open question;
-// either it earns its keep or it moves out into a config / disappears.
-//
-// To bump the vendored schema: replace fixtures/jsonresume-schema.json
-// with the chosen upstream tag, run `make test`, and audit
-// `_content-paths` against any newly added free-text fields.
+// inline rendering. Open question tracked in #32 — either the
+// override earns its keep or it moves to config / disappears.
 
 #import "kinds.typ": str-type, content-type, number-type, array-of, object
 #import "json-schema.typ": schema-from-json-schema
