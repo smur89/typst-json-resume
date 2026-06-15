@@ -26,6 +26,6 @@
 )
 
 #let resume-schema = _content-paths.fold(
-  schema-from-json-schema(json("fixtures/jsonresume-schema.json")),
+  schema-from-json-schema(json("assets/jsonresume-schema.json")),
   (s, p) => lens-put(lens(p), s, content-type),
 )

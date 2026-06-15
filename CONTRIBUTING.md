@@ -28,7 +28,7 @@ to the appropriate downstream template repo.
 lib.typ                              # public entry — `parse`, `validate`, `coerce`, combinators, lenses
 internal/kinds.typ                   # schema-kind primitives (str-type, content-type, object, array-of, …)
 internal/schema.typ                  # canonical resume-schema (derived from the vendored JSON Schema)
-internal/fixtures/jsonresume-schema.json  # vendored upstream schema, pinned to v1.0.0
+internal/assets/jsonresume-schema.json  # vendored upstream schema, pinned to v1.0.0
 internal/validate.typ                # validation engine (path-typed errors)
 internal/coerce.typ                  # coercion engine (content wrapping, null absorption)
 internal/json-schema.typ             # JSON Schema → Typst-schema translator
@@ -39,10 +39,10 @@ tests/                               # fixtures — CI compiles each as a regres
 ## Bumping the vendored JSON Resume schema
 
 `internal/schema.typ` derives `resume-schema` from
-`internal/fixtures/jsonresume-schema.json` at module-load time, so the
+`internal/assets/jsonresume-schema.json` at module-load time, so the
 upstream document is the source of truth. To pull a newer upstream version:
 
-1. Replace `internal/fixtures/jsonresume-schema.json` with the chosen tag from
+1. Replace `internal/assets/jsonresume-schema.json` with the chosen tag from
    [jsonresume/resume-schema](https://github.com/jsonresume/resume-schema).
 2. Run `make test`. The translator handles the draft-04/-07 subset that the
    canonical document uses; newer constructs (`allOf`/`anyOf`/`oneOf`,
