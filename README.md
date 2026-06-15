@@ -212,24 +212,27 @@ your own by lensing over `resume-schema` — see
 ## Format validation
 
 Fields the canonical schema annotates with `format: "uri"`,
-`format: "email"`, `format: "date"`, or `format: "date-time"` are
-gated by a regex during `validate` / `parse`. The patterns are
-deliberately permissive — they reject obvious malformations without
-claiming full RFC compliance — and each emits a path-qualified
-message with a canonical example:
+`format: "email"`, or `format: "date"` are gated by a regex during
+`validate` / `parse`. The patterns are deliberately permissive —
+they reject obvious malformations without claiming full RFC
+compliance — and each emits a path-qualified message with a
+canonical example:
 
 ```text
 basics.email:           expected an email (e.g. "name@example.com").
 basics.url:             expected a URI (e.g. "https://example.com").
 certificates[0].date:   expected an ISO-8601 date (e.g. "2024-01-15").
-meta.lastModified:      expected an ISO-8601 datetime (e.g. "2024-01-15T10:00:00Z").
 ```
 
-`date-string` accepts `YYYY` / `YYYY-MM` / `YYYY-MM-DD`; `datetime-string`
-requires the full `YYYY-MM-DDTHH:MM:SS` shape with an optional fractional
-component and an optional `Z` or `±HH:MM` offset. The two are separate
-kinds on purpose — widening the date regex to also match datetime values
-would mislabel pure-date fields.
+`format: "date-time"` is supported too via the `datetime-string` kind:
+the canonical JSON Resume document doesn't currently carry any
+`date-time` annotations, so the kind only fires when a caller
+translates their own JSON Schema with `schema-from-json-schema`, or
+lens-overrides a field. `date-string` accepts `YYYY` / `YYYY-MM` /
+`YYYY-MM-DD`; `datetime-string` requires the full `YYYY-MM-DDTHH:MM:SS`
+shape with an optional fractional component and an optional `Z` or
+`±HH:MM` offset. The two are separate kinds on purpose — widening the
+date regex to also match datetime values would mislabel pure-date fields.
 
 Most date fields in JSON Resume (`work[].startDate`, `awards[].date`,
 `meta.lastModified`, …) use `$ref: "#/definitions/iso8601"` rather
