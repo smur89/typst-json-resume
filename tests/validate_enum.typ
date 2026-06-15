@@ -61,7 +61,15 @@
 #assert.eq(const-errs.len(), 1)
 #assert(const-errs.at(0).message.contains("\"v1.0.0\""))
 
-// ---- Coercion is pass-through --------------------------------------
+// ---- Empty enum rejects every input --------------------------------
+
+#let empty = enum-of(())
+#let empty-schema = object((x: empty))
+#let empty-errs = validate((x: "anything"), schema: empty-schema)
+#assert.eq(empty-errs.len(), 1)
+#assert(empty-errs.at(0).message.contains("expected one of"))
+
+// ---- Coercion is membership-checked pass-through -------------------
 
 #assert.eq(coerce((fluency: "native"), schema: fluency-schema).fluency, "native")
 #assert.eq(coerce((rating: 5), schema: rating-schema).rating, 5)
