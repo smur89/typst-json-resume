@@ -5,6 +5,14 @@
 #let content-type = (kind: "content")
 #let number-type  = (kind: "number")
 
+// Format-specialised string combinators. They behave like `str` for
+// type checks + coercion (pass-through), and add a regex/shape gate
+// in `_validate`. Patterns are deliberately permissive — they reject
+// obvious malformations without claiming full RFC compliance.
+#let date-string  = (kind: "date-string")
+#let uri-string   = (kind: "uri-string")
+#let email-string = (kind: "email-string")
+
 #let array-of(elem) = (kind: "array", elem: elem)
 
 // Default `()` preserves the canonical schema's all-optional stance.
@@ -27,8 +35,9 @@
 }
 
 // Canonical JSON Resume schema (https://jsonresume.org/schema).
-// All fields optional, types checked when present. Format checks for
-// dates / URLs / emails are v0.2+ work.
+// All fields optional, types checked when present. Format-specialised
+// combinators (date-string / uri-string / email-string) gate fields
+// the spec assigns iso8601 / uri / email formats.
 
 #let _location = object((
   address: str-type,
@@ -41,16 +50,16 @@
 #let _profile = object((
   network: str-type,
   username: str-type,
-  url: str-type,
+  url: uri-string,
 ))
 
 #let _basics = object((
   name: str-type,
   label: str-type,
-  image: str-type,
-  email: str-type,
+  image: uri-string,
+  email: email-string,
   phone: str-type,
-  url: str-type,
+  url: uri-string,
   summary: content-type,
   location: _location,
   profiles: array-of(_profile),
@@ -61,9 +70,9 @@
   location: str-type,
   description: str-type,
   position: str-type,
-  url: str-type,
-  startDate: str-type,
-  endDate: str-type,
+  url: uri-string,
+  startDate: date-string,
+  endDate: date-string,
   summary: content-type,
   highlights: array-of(content-type),
 ))
@@ -71,43 +80,43 @@
 #let _volunteer-item = object((
   organization: str-type,
   position: str-type,
-  url: str-type,
-  startDate: str-type,
-  endDate: str-type,
+  url: uri-string,
+  startDate: date-string,
+  endDate: date-string,
   summary: content-type,
   highlights: array-of(content-type),
 ))
 
 #let _education-item = object((
   institution: str-type,
-  url: str-type,
+  url: uri-string,
   area: str-type,
   studyType: str-type,
-  startDate: str-type,
-  endDate: str-type,
+  startDate: date-string,
+  endDate: date-string,
   score: str-type,
   courses: array-of(str-type),
 ))
 
 #let _award = object((
   title: str-type,
-  date: str-type,
+  date: date-string,
   awarder: str-type,
   summary: content-type,
 ))
 
 #let _certificate = object((
   name: str-type,
-  date: str-type,
-  url: str-type,
+  date: date-string,
+  url: uri-string,
   issuer: str-type,
 ))
 
 #let _publication = object((
   name: str-type,
   publisher: str-type,
-  releaseDate: str-type,
-  url: str-type,
+  releaseDate: date-string,
+  url: uri-string,
   summary: content-type,
 ))
 
@@ -137,18 +146,18 @@
   description: content-type,
   highlights: array-of(content-type),
   keywords: array-of(str-type),
-  startDate: str-type,
-  endDate: str-type,
-  url: str-type,
+  startDate: date-string,
+  endDate: date-string,
+  url: uri-string,
   roles: array-of(str-type),
   entity: str-type,
   type: str-type,
 ))
 
 #let _meta = object((
-  canonical: str-type,
+  canonical: uri-string,
   version: str-type,
-  lastModified: str-type,
+  lastModified: date-string,
 ))
 
 #let resume-schema = object((

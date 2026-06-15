@@ -58,9 +58,20 @@
 
 // Plain-string identifiers stay str-typed.
 #assert.eq(resume-schema.shape.basics.shape.name.kind, "str")
-#assert.eq(resume-schema.shape.basics.shape.email.kind, "str")
-#assert.eq(resume-schema.shape.work.elem.shape.url.kind, "str")
-#assert.eq(resume-schema.shape.work.elem.shape.startDate.kind, "str")
+
+// Format-specialised string fields carry their format kind. Coercion
+// is still pass-through (see coerce_primitives.typ); `_validate` adds
+// a regex gate for these kinds.
+#assert.eq(resume-schema.shape.basics.shape.email.kind, "email-string")
+#assert.eq(resume-schema.shape.basics.shape.url.kind, "uri-string")
+#assert.eq(resume-schema.shape.basics.shape.image.kind, "uri-string")
+#assert.eq(resume-schema.shape.work.elem.shape.url.kind, "uri-string")
+#assert.eq(resume-schema.shape.work.elem.shape.startDate.kind, "date-string")
+#assert.eq(resume-schema.shape.work.elem.shape.endDate.kind, "date-string")
+#assert.eq(resume-schema.shape.awards.elem.shape.date.kind, "date-string")
+#assert.eq(resume-schema.shape.publications.elem.shape.releaseDate.kind, "date-string")
+#assert.eq(resume-schema.shape.meta.shape.canonical.kind, "uri-string")
+#assert.eq(resume-schema.shape.meta.shape.lastModified.kind, "date-string")
 
 // Array-of-string fields (tags / lists).
 #assert.eq(resume-schema.shape.skills.elem.shape.keywords.kind, "array")

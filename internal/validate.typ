@@ -17,6 +17,34 @@
   message: "expected " + expected + ", got " + _type-name-of(value) + ".",
 ),)
 
+// Format-specialised string kinds use canonical JSON Resume regexes
+// (or permissive shape checks where the spec only says "uri" / "email").
+// Patterns are anchored with ^…$ so `value.matches(re)` returns one
+// match iff the whole string conforms.
+//
+//  - date-string: iso8601 — YYYY, YYYY-MM, or YYYY-MM-DD. Canonical
+//    schema regex (see https://github.com/jsonresume/resume-schema).
+//  - uri-string:  scheme `[a-z][a-z0-9+.-]*`, then `://`, then non-empty
+//    rest. Permissive — does NOT enforce RFC 3986.
+//  - email-string: non-empty local + `@` + non-empty domain with at
+//    least one dot. Permissive — does NOT enforce RFC 5322.
+#let _format-patterns = (
+  "date-string":  regex("^([1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]|[1-2][0-9]{3}-[0-1][0-9]|[1-2][0-9]{3})$"),
+  "uri-string":   regex("^[a-z][a-z0-9+.\-]*://.+$"),
+  "email-string": regex("^[^@\s]+@[^@\s]+\.[^@\s]+$"),
+)
+
+#let _format-descriptions = (
+  "date-string":  "an ISO-8601 date (e.g. \"2024-01-15\")",
+  "uri-string":   "a URI (e.g. \"https://example.com\")",
+  "email-string": "an email (e.g. \"name@example.com\")",
+)
+
+#let _format-error(path, kind, value) = ((
+  path: path,
+  message: "expected " + _format-descriptions.at(kind) + ", got " + repr(value) + ".",
+),)
+
 #let _validate(schema, value, path) = {
   // Null at any value position is "key absent" — no error, no
   // recursion. Single early return handles every shape uniformly:
@@ -26,6 +54,13 @@
   let kind = schema.kind
   if kind in ("str", "content") {
     if type(value) != str { return _type-error(path, "string", value) }
+    return ()
+  }
+  if kind in ("date-string", "uri-string", "email-string") {
+    if type(value) != str { return _type-error(path, "string", value) }
+    if value.matches(_format-patterns.at(kind)).len() == 0 {
+      return _format-error(path, kind, value)
+    }
     return ()
   }
   if kind == "number" {
