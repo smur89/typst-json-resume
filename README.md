@@ -83,14 +83,22 @@ resume.work.at(0).highlights  array of content
 resume.skills.at(0).keywords  array of str (tag-like, not coerced)
 ```
 
-Pass the model into any compatible renderer — e.g. `altacv`:
+Pass the model into any compatible renderer — e.g. [`altacv`](https://typst.app/universe/package/altacv):
 
 ```typst
-#import "@preview/altacv:1.1.1": alta
+#import "@preview/altacv:1.1.1": alta, palettes // x-release-please-version
 #import "@preview/json-resume:0.1.0": parse-resume // x-release-please-version
 
-#alta(parse-resume(json("resume.json")))
+#alta(
+  parse-resume(json("resume.json")),
+  preferences: (accent: palettes.navy),
+)
 ```
+
+`alta(cv, labels: (:), preferences: (:))` takes the JSON-Resume-shaped dict
+positionally; `labels` and `preferences` are optional dicts merged over the
+template defaults. See the [altacv README](https://github.com/smur89/alta-typst#readme)
+for the full surface.
 
 ### Handling validation errors yourself
 
