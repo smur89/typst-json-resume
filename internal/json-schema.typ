@@ -103,7 +103,13 @@
   if t in ("boolean", "null") {
     _bail("unsupported JSON Schema type: " + repr(t) + ".")
   }
-  _bail("unrecognised JSON Schema fragment (no \"type\" or \"$ref\"); keys: " + repr(js.keys()) + ".")
+  if type(t) == array {
+    // JSON Schema allows `type` as an array (e.g. `["string", "null"]`
+    // for nullable). Union types are out of scope; the null-as-absent
+    // policy already covers the nullable case at the validator level.
+    _bail("union `type` arrays are unsupported, got: " + repr(t) + ".")
+  }
+  _bail("unrecognised JSON Schema fragment (no recognised \"type\" or \"$ref\"); keys: " + repr(js.keys()) + ".")
 }
 
 #let schema-from-json-schema(js) = _from-json-schema(js, js, ())

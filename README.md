@@ -204,7 +204,7 @@ subset) into a Typst schema dict. Use it when you already have an authoritative
 
 ```typst
 #import "@preview/json-resume:0.1.1": ( // x-release-please-version
-  schema-from-json-schema, validate, coerce, object, array-of, str-type, content-type,
+  schema-from-json-schema, coerce, object, array-of, content-type,
 )
 
 #let canonical = schema-from-json-schema(json("resume-schema.json"))
