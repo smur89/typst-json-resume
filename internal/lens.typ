@@ -117,6 +117,25 @@
   },
 )
 
+// Symmetric to set-required: relax specific keys without re-specifying
+// the whole required list. Absent-key panics (rather than silent no-op)
+// so a stale mental model — "I know that's still required" — surfaces.
+#let unset-required(schema, parent-lens, keys) = lens-over(
+  parent-lens,
+  schema,
+  parent => {
+    _require-object(parent, "unset-required")
+    let absent = keys.filter(k => k not in parent.required-keys)
+    if absent.len() > 0 {
+      _bail(
+        "unset-required keys not in required-keys: " + absent.join(", ") +
+          ". Current required: " + parent.required-keys.join(", ") + ".",
+      )
+    }
+    (..parent, required-keys: parent.required-keys.filter(k => k not in keys))
+  },
+)
+
 // Absent-key panics rather than being a silent no-op so caller typos surface.
 #let remove-field(schema, parent-lens, key) = lens-over(
   parent-lens,
