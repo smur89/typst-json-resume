@@ -3,9 +3,12 @@
 //
 // JSON `null` (Typst's `none`) at a value position is treated as if
 // the key were absent: no type error, no recursion. Per-key null
-// values in objects are skipped in the recursion loop; null array
-// elements are absorbed by the top-of-function early return. See
-// README "Errors" section for the user-facing rationale.
+// values in objects, null array elements, and entire-section nulls
+// are all absorbed by the top-of-function early return — recursion
+// handles them uniformly. The required-keys check below is the only
+// place that still needs an explicit null check (a present-but-null
+// required key must still count as missing). See README "Errors"
+// section for the user-facing rationale.
 
 #import "errors.typ": _type-name-of
 
@@ -16,9 +19,9 @@
 
 #let _validate(schema, value, path) = {
   // Null at any value position is "key absent" — no error, no
-  // recursion. This handles array elements via the per-element call
-  // and standalone scalar invocations; per-key null values in object
-  // shapes are also short-circuited inside the object branch.
+  // recursion. Single early return handles every shape uniformly:
+  // standalone scalars, array elements (via the per-element call),
+  // and per-key sub-values inside objects (via the per-key call).
   if value == none { return () }
   let kind = schema.kind
   if kind in ("str", "content") {
@@ -39,10 +42,9 @@
     if type(value) != dictionary { return _type-error(path, "object", value) }
     let per-key-errs = value.pairs().map(((key, sub-value)) => {
       if key in schema.shape {
-        // A known key with an explicit null value is treated as
-        // absent — no recursion, no error.
-        if sub-value == none { () }
-        else { _validate(schema.shape.at(key), sub-value, path + (key,)) }
+        // Null sub-values are absorbed by the top-of-function early
+        // return on the recursive call — no need to special-case here.
+        _validate(schema.shape.at(key), sub-value, path + (key,))
       } else {
         // Valid-keys list only assembled on the unknown-key branch so
         // the happy path skips the join. An unknown key with a null

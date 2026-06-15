@@ -71,3 +71,26 @@
   meta: none,
 )
 #assert.eq(validate-resume(raw), ())
+
+// The engine still treats `none` as "key absent" at any value
+// position — that's the right rule for LEAVES inside a document.
+// Verified here at the engine level so the wrapper can layer its
+// own root-level guard on top without changing the leaf rule.
+#import "../internal/schema.typ": resume-schema
+#import "../internal/validate.typ": _validate
+#assert.eq(_validate(resume-schema, none, ()), ())
+
+// Public wrappers reject a null root explicitly so callers passing
+// the wrong thing get a friendly panic, not silent garbage. We can't
+// catch the panic from inside the compiled test (Typst has no
+// try/catch), so the actual panic is exercised by the wrapper's unit
+// usage and by the source assertion below. The empty-dict input is
+// the closest non-panicking sibling — it should still succeed,
+// confirming the guard fires only on `none`.
+#assert.eq(validate-resume((:)), ())
+
+// Source-level assertion: the friendly panic message is present in
+// lib.typ. Compile-time pin so a future refactor that drops the
+// guard or rewords the message trips this test.
+#let lib-source = read("../lib.typ")
+#assert(lib-source.contains("input must be a dict, got null."))

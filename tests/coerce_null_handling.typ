@@ -76,3 +76,24 @@
 // Whole-section nulls disappear from the top-level model.
 #assert("skills" not in model)
 #assert("meta" not in model)
+
+// An object whose every key is null coerces to `none` — symmetric
+// with the leaf-null policy. The parent filter then drops the key.
+#assert.eq(_coerce(person, (name: none, age: none, summary: none)), none)
+#assert.eq(_coerce(person, (:)), none)
+
+// Unknown keys are dropped, so an object with only unknown keys is
+// also all-empty after the shape filter and becomes `none`.
+#assert.eq(_coerce(person, (nickname: "Al", color: "blue")), none)
+
+// Recursively: an all-null nested object propagates outward. A
+// top-level resume whose only present section is itself all-null
+// coerces to `none` (consistent extension of the policy — every key
+// in the root coerced to absent, so the root is absent too).
+#let all-null-basics = coerce-resume((basics: (name: none, email: none, summary: none)))
+#assert.eq(all-null-basics, none)
+
+// And a single live leaf anywhere keeps the chain intact.
+#let one-leaf = coerce-resume((basics: (name: "Alice", email: none)))
+#assert.eq(one-leaf.basics.name, "Alice")
+#assert("email" not in one-leaf.basics)
