@@ -1,7 +1,7 @@
 // JSON Schema → Typst-schema translator. Mechanical mapping for the
 // draft-7 subset the canonical JSON Resume document actually uses;
-// unsupported keywords panic with a path-qualified message rather
-// than silently dropping shape.
+// unsupported keywords and shapes panic with an explicit message
+// rather than silently dropping constraints.
 //
 // Format-aware string kinds (date-string / uri-string / email-string)
 // land in #10 (feat/format-validation). Until they're on main this
@@ -11,16 +11,30 @@
 #import "schema.typ": str-type, content-type, number-type, array-of, object
 
 // Resolve an internal $ref like "#/definitions/iso8601" against the
-// document root. External $refs (URLs, other documents) panic — we
-// do not fetch.
-#let _resolve-ref(ref, root) = {
+// document root. `seen` is the chain of refs traversed so far; a
+// repeat indicates a cycle (e.g. definitions.alias → alias) and we
+// panic at the first repeat rather than letting Typst's recursion
+// limit fire deep in the stack.
+#let _resolve-ref(ref, root, seen) = {
   if not ref.starts-with("#/") {
     panic(
       "json-resume: schema-from-json-schema only supports internal $ref " +
         "(starting with \"#/\"), got: " + repr(ref) + ".",
     )
   }
-  let parts = ref.slice(2).split("/")
+  if ref in seen {
+    panic(
+      "json-resume: schema-from-json-schema — cyclic $ref detected: " +
+        seen.map(repr).join(" → ") + " → " + repr(ref) + ".",
+    )
+  }
+  if ref == "#/" {
+    panic(
+      "json-resume: schema-from-json-schema — $ref \"#/\" cannot " +
+        "reference the document root.",
+    )
+  }
+  let parts = ref.slice(2).split("/").filter(p => p != "")
   parts.fold(root, (acc, key) => {
     if type(acc) != dictionary or key not in acc {
       panic(
@@ -42,9 +56,14 @@
   "dependencies", "dependentRequired", "dependentSchemas",
 )
 
-#let _from-json-schema(js, root) = {
+#let _from-json-schema(js, root, seen) = {
   if "$ref" in js {
-    return _from-json-schema(_resolve-ref(js.at("$ref"), root), root)
+    let ref = js.at("$ref")
+    return _from-json-schema(
+      _resolve-ref(ref, root, seen),
+      root,
+      seen + (ref,),
+    )
   }
   for keyword in _unsupported-keywords {
     if keyword in js {
@@ -75,13 +94,26 @@
     if items == none {
       panic("json-resume: schema-from-json-schema — array schema missing \"items\".")
     }
-    return array-of(_from-json-schema(items, root))
+    return array-of(_from-json-schema(items, root, seen))
   }
   if t == "object" {
-    let props = js.at("properties", default: (:))
+    // JSON Schema `{ "type": "object" }` without `properties` means
+    // "any object" (open). The validator engine is strict by design —
+    // it can't represent open objects — so refuse to translate
+    // rather than silently produce a validator that rejects every
+    // key. Schema authors needing pass-through fields should declare
+    // them in `properties`.
+    if "properties" not in js {
+      panic(
+        "json-resume: schema-from-json-schema — open object schemas " +
+          "(`type: \"object\"` with no `properties`) are out of scope; " +
+          "every field must be declared.",
+      )
+    }
+    let props = js.at("properties")
     let required = js.at("required", default: ())
     return object(
-      props.pairs().map(((k, v)) => (k, _from-json-schema(v, root))).to-dict(),
+      props.pairs().map(((k, v)) => (k, _from-json-schema(v, root, seen))).to-dict(),
       required-keys: required,
     )
   }
@@ -97,4 +129,4 @@
   )
 }
 
-#let schema-from-json-schema(js) = _from-json-schema(js, js)
+#let schema-from-json-schema(js) = _from-json-schema(js, js, ())

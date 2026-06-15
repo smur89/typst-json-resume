@@ -64,8 +64,11 @@
 ))
 #assert.eq(loose.required-keys, ())
 
-// Object with no properties at all → empty shape.
-#let empty = schema-from-json-schema((type: "object"))
+// Object with explicit empty properties — accepts only an empty
+// dict. (An object schema with no `properties` key at all is treated
+// as an open object and panics; this is the "I really do mean
+// strict-empty" form.)
+#let empty = schema-from-json-schema((type: "object", properties: (:)))
 #assert.eq(empty.kind, "object")
 #assert.eq(empty.shape, (:))
 
@@ -89,3 +92,27 @@
   items: ("$ref": "#/$defs/item"),
 ))
 #assert.eq(array-of-refs, array-of(str-type))
+
+// Chained $ref: alias → real definition. Both hops resolve and the
+// final type comes through.
+#let chained = schema-from-json-schema((
+  definitions: (
+    alias: ("$ref": "#/definitions/iso8601"),
+    iso8601: (type: "string"),
+  ),
+  type: "object",
+  properties: (
+    startDate: ("$ref": "#/definitions/alias"),
+  ),
+))
+#assert.eq(chained.shape.startDate, str-type)
+
+// Trailing slash in $ref is tolerated — empty segments dropped.
+#let trailing = schema-from-json-schema((
+  definitions: (foo: (type: "string")),
+  type: "object",
+  properties: (
+    x: ("$ref": "#/definitions/foo/"),
+  ),
+))
+#assert.eq(trailing.shape.x, str-type)
