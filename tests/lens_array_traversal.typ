@@ -24,3 +24,6 @@
 #let widened = lens-put(work-highlights, resume-schema, content-type)
 #assert.eq(widened.shape.work.kind, "array")
 #assert.eq(widened.shape.work.elem.kind, "object")
+// And the targeted node is actually the replacement value.
+#assert.eq(widened.shape.work.elem.shape.highlights, content-type)
+#assert.eq(lens-get(work-highlights, widened), content-type)
