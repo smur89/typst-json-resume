@@ -99,9 +99,8 @@
   },
 )
 
-// Replace (not merge) — explicit overwrite mirrors lens-put's semantics.
-// Keys must exist in shape so a typo fails at edit time, not at validate
-// time as a phantom "missing required key" against the wrong name.
+// Replace, not merge — mirrors lens-put. Keys must exist in shape
+// so a typo fails at edit time, not as a phantom "missing X" error.
 #let set-required(schema, parent-lens, keys) = lens-over(
   parent-lens,
   schema,

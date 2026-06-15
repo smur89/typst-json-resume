@@ -1,7 +1,6 @@
-// Pins the set-required lens companion: replaces an object schema's
-// required-keys via lens, drives validate's "missing required key"
-// errors from the new list, preserves the immutability contract,
-// surfaces typos as construction-time panics.
+// Pins set-required: lens-driven required-keys replacement, validate
+// emits "missing required key" from the new list, immutability holds,
+// typos surface as construction-time panics.
 
 #import "../lib.typ": (
   lens, set-required, object, validate,
@@ -20,7 +19,6 @@
 #let strict = set-required(schema, basics-lens, ("name", "email"))
 #assert.eq(strict.shape.basics.required-keys, ("name", "email"))
 
-// validate now emits missing-required errors for the new list.
 #let errs = validate((basics: (summary: "hi")), schema: strict)
 #assert.eq(errs.len(), 2)
 #let paths = errs.map(e => e.path)
@@ -28,7 +26,6 @@
 #assert(("basics", "email") in paths)
 #assert(errs.at(0).message.contains("missing required key"))
 
-// Satisfying both required keys clears the errors.
 #assert.eq(
   validate(
     (basics: (name: "Alice", email: "alice@example.com", summary: "hi")),
