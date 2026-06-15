@@ -49,3 +49,25 @@
   _closest-match("nme", ("name", "email"), 2),
   "name",
 )
+
+// Tie-breaking: when two candidates are equidistant from the target,
+// the one declared first wins. Both "abc" and "xyz" sit at distance 3
+// from "qqq"; only "abc" should surface.
+#assert.eq(
+  _closest-match("qqq", ("abc", "xyz"), 3),
+  "abc",
+)
+#assert.eq(
+  _closest-match("qqq", ("xyz", "abc"), 3),
+  "xyz",
+)
+
+// Boundary: distance == max-distance is INCLUSIVE.
+#assert.eq(
+  _closest-match("ab", ("xy",), 2),
+  "xy",
+)
+#assert.eq(
+  _closest-match("ab", ("xy",), 1),
+  none,
+)

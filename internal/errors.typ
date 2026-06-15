@@ -47,29 +47,28 @@
   let ac = a.clusters()
   let bc = b.clusters()
   let n = bc.len()
-  let base-row = range(0, n + 1)
-  let final-row = ac.enumerate().fold(base-row, (prev, pair) => {
-    let (i, ca) = pair
-    bc.enumerate().fold((i + 1,), (row, pair2) => {
-      let (j, cb) = pair2
+  let final-row = ac.enumerate().fold(range(0, n + 1), (prev, (i, ca)) => {
+    bc.enumerate().fold((i + 1,), (row, (j, cb)) => {
       let cost = if ca == cb { 0 } else { 1 }
-      let deletion = prev.at(j + 1) + 1
-      let insertion = row.at(j) + 1
-      let substitution = prev.at(j) + cost
-      row + (calc.min(deletion, insertion, substitution),)
+      row + (calc.min(
+        prev.at(j + 1) + 1,  // deletion
+        row.at(j) + 1,       // insertion
+        prev.at(j) + cost,   // substitution
+      ),)
     })
   })
   final-row.at(n)
 }
 
-// Pure: rank candidates by edit distance, return the closest one
-// inside `max-distance`. Empty `candidates` → none. Ties resolved by
-// `sorted`'s stable order (i.e. input order).
+// Pure: pick the candidate closest to `target` by edit distance, or
+// `none` if the best is outside `max-distance` (inclusive) or
+// `candidates` is empty. Single-pass fold — strict `<` keeps the
+// first-seen winner on ties, so the schema's declaration order
+// decides equidistant matches.
 #let _closest-match(target, candidates, max-distance) = {
-  let ranked = candidates
-    .map(c => (key: c, distance: _edit-distance(target, c)))
-    .sorted(key: e => e.distance)
-  let best = ranked.at(0, default: none)
-  if best == none { return none }
-  if best.distance <= max-distance { best.key } else { none }
+  let best = candidates.fold(none, (acc, c) => {
+    let d = _edit-distance(target, c)
+    if acc == none or d < acc.distance { (key: c, distance: d) } else { acc }
+  })
+  if best != none and best.distance <= max-distance { best.key } else { none }
 }
