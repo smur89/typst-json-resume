@@ -146,11 +146,6 @@ work[]:
   (("work", "items", "startDate"),),
 )
 
-// Unknown kind name rejected — typo surfaces at call time rather
-// than as a silently-empty result.
-// (Smoke check only — assert.eq of a panicking call is hard to
-// express; covered by the kind-name list living alongside the helper.)
-
 // --- kind-at ---------------------------------------------------------
 
 #assert.eq(kind-at(resume-schema, ("basics", "name")), "str")

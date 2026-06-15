@@ -19,10 +19,8 @@
 // dictionary insertion order in the source.
 #let _sorted-pairs(d) = d.pairs().sorted(key: p => p.at(0))
 
-// Render `key  kind` with the key left-padded to `width` so columns
-// align inside one object. enum nodes carry their values inline for
-// at-a-glance debugging; longer leaf kinds (date-string, uri-string,
-// email-string) speak for themselves.
+// enum nodes carry their values inline for at-a-glance debugging;
+// every other kind name speaks for itself.
 #let _leaf-suffix(sub) = if sub.kind == "enum" {
   "enum (" + sub.values.map(repr).join(", ") + ")"
 } else {
@@ -31,31 +29,31 @@
 
 #let _pad-right(s, width) = s + " " * (width - s.len())
 
-// Recursive pretty-printer. `indent` is the prefix prepended to every
-// emitted line at the current depth; children add two more spaces.
-// Each recursive call returns the block for ONE schema node, which
-// the caller stitches into the parent's lines.
+// Returns the column-key (with `[]` suffix for array-of-leaf) for an
+// inline-rendered child, or `none` for children that emit their own
+// header line and don't contribute to the kind-column width.
+#let _column-key(key, sub) = {
+  if sub.kind == "object" { none }
+  else if sub.kind == "array" and sub.elem.kind == "object" { none }
+  else if sub.kind == "array" { key + "[]" }
+  else { key }
+}
+
+// Recursive pretty-printer. `indent` prefixes every line at this
+// depth; nested children add two more spaces.
 #let _describe(schema, indent) = {
   if schema.kind == "object" {
     let pairs = _sorted-pairs(schema.shape)
-    // Compute key-column width over leaf children only — nested
-    // objects/arrays emit their header on the next line, so their key
-    // width is the bare `key:` rather than `key  kind`.
-    let leaf-keys = pairs
-      .filter(p => p.at(1).kind not in ("object", "array"))
-      .map(p => p.at(0))
-    let arr-leaf-keys = pairs
-      .filter(p => p.at(1).kind == "array" and p.at(1).elem.kind != "object")
-      .map(p => p.at(0) + "[]")
-    let widths = (leaf-keys + arr-leaf-keys).map(k => k.len())
-    let col = if widths.len() == 0 { 0 } else { calc.max(..widths) + 2 }
+    let column-keys = pairs.map(((k, s)) => _column-key(k, s)).filter(k => k != none)
+    let col = if column-keys.len() == 0 { 0 } else {
+      calc.max(..column-keys.map(k => k.len())) + 2
+    }
     let lines = pairs.map(((key, sub)) => {
       if sub.kind == "object" {
         indent + key + ":\n" + _describe(sub, indent + "  ")
       } else if sub.kind == "array" and sub.elem.kind == "object" {
         indent + key + "[]:\n" + _describe(sub.elem, indent + "  ")
       } else if sub.kind == "array" {
-        // Array of leaf — show `key[]  <leaf-kind>` on a single line.
         indent + _pad-right(key + "[]", col) + _leaf-suffix(sub.elem)
       } else {
         indent + _pad-right(key, col) + _leaf-suffix(sub)
@@ -63,8 +61,6 @@
     })
     if lines.len() == 0 { "" } else { lines.join("\n") }
   } else if schema.kind == "array" {
-    // Top-level (or directly-nested) array node. Object element is
-    // expanded under an "[]" header; leaf element is reported inline.
     if schema.elem.kind == "object" {
       indent + "[]:\n" + _describe(schema.elem, indent + "  ")
     } else {
@@ -77,10 +73,7 @@
 
 #let describe-schema(schema) = _describe(schema, "")
 
-// Walk every leaf and collect lens-compatible paths whose terminal
-// kind matches `kind-name`. Object descent uses the key as the
-// segment; array descent uses the literal "items" so the returned
-// tuples plug straight into `lens(path)`.
+// Collect every path whose terminal kind matches `kind-name`.
 #let _walk-paths(schema, path, kind-name) = {
   if schema.kind == "object" {
     _sorted-pairs(schema.shape)
