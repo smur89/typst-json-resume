@@ -64,10 +64,9 @@
 ))
 #assert.eq(loose.required-keys, ())
 
-// Object with explicit empty properties — accepts only an empty
-// dict. (An object schema with no `properties` key at all is treated
-// as an open object and panics; this is the "I really do mean
-// strict-empty" form.)
+// Object with explicit empty properties — accepts only an empty dict.
+// (Missing `properties` panics as an open-object schema; this is the
+// strict-empty form.)
 #let empty = schema-from-json-schema((type: "object", properties: (:)))
 #assert.eq(empty.kind, "object")
 #assert.eq(empty.shape, (:))
