@@ -175,26 +175,6 @@ combinators and the generic engines:
 // render model with the renderer's own theme…
 ```
 
-To handle errors yourself instead of aborting, use `validate(schema, data)` +
-`coerce(schema, data)` directly — both return data, neither panics on validation
-issues:
-
-```typst
-#import "@preview/json-resume:0.1.1": ( // x-release-please-version
-  validate, coerce, format-errors,
-)
-
-#let raw = json("resume.json")
-#let errors = validate(altacv-schema, raw)
-#if errors.len() > 0 [
-  // Surface them in the document, log them, render a placeholder, …
-  Resume has #errors.len() issue(s).
-] else [
-  #let model = coerce(altacv-schema, raw)
-  // …
-]
-```
-
 When to reach for which API:
 
 - **`parse-resume(data)` / `parse(schema, data)`** — one call, aborts compilation
@@ -202,7 +182,8 @@ When to reach for which API:
   shortcut; `parse` is the generic form.
 - **`validate-resume` / `coerce-resume`** (canonical) or **`validate` / `coerce`**
   (generic) — return data instead of aborting, so you can present errors
-  yourself.
+  yourself. Same shape as the [step-by-step above](#handling-validation-errors-yourself),
+  with `(schema, data)` in place of the canonical wrappers.
 
 `resume-schema.shape` is a plain dict, so `..resume-schema.shape` is the only
 operator you need to extend it. Per-section combinators (`work-item`,
