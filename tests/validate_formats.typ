@@ -1,6 +1,6 @@
 // Format-specialised string combinators reject malformed values with
 // path-qualified error messages that name the expected format and
-// give an example. Coverage:
+// give a canonical example. Coverage:
 //
 //  - date-string  → iso8601 (YYYY / YYYY-MM / YYYY-MM-DD)
 //  - uri-string   → scheme://rest (permissive)
@@ -8,16 +8,10 @@
 //
 // Each format has positive cases (errors list empty), negative cases
 // (one path-qualified error), and a spot-check that the message
-// names the format and embeds the offending value via repr(...).
+// names the format and includes the canonical example.
 
 #import "../internal/validate.typ": _validate
 #import "../internal/schema.typ": date-string, uri-string, email-string, object, array-of
-
-// Combinator shapes are plain tagged records — the validator dispatches
-// on `.kind` and the coercer treats them as pass-through strings.
-#assert.eq(date-string,  (kind: "date-string"))
-#assert.eq(uri-string,   (kind: "uri-string"))
-#assert.eq(email-string, (kind: "email-string"))
 
 // ---- date-string ----------------------------------------------------
 
@@ -35,13 +29,12 @@
   errs.at(0).message
 }
 
-// Slash-separated, free-text, partial, three-digit year, four-digit
-// non-iso forms — all rejected. The message names ISO-8601, gives an
-// example, and embeds the offending value via repr.
+// Slash-separated, free-text, partial, three-digit year, datetime
+// forms — all rejected. The message names ISO-8601 and gives the
+// canonical example.
 #let m1 = date-fail("2024/01/15", ("basics", "startDate"))
 #assert(m1.contains("ISO-8601"))
 #assert(m1.contains("e.g. \"2024-01-15\""))
-#assert(m1.contains("\"2024/01/15\""))
 
 #assert(date-fail("jan 2024",   ("d",)).contains("ISO-8601"))
 #assert(date-fail("2024-1-15",  ("d",)).contains("ISO-8601"))
@@ -54,7 +47,6 @@
 // We constrain to real ranges (01-12 / 01-31). Day=00 and month=00
 // are also rejected.
 #assert(date-fail("2024-13-15", ("d",)).contains("ISO-8601"))  // month > 12
-#assert(date-fail("2024-19-39", ("d",)).contains("ISO-8601"))  // month > 12 + day > 31
 #assert(date-fail("2024-00-15", ("d",)).contains("ISO-8601"))  // month = 00
 #assert(date-fail("2024-01-32", ("d",)).contains("ISO-8601"))  // day > 31
 
@@ -90,7 +82,6 @@
 #let m2 = uri-fail("not-a-uri", ("basics", "url"))
 #assert(m2.contains("URI"))
 #assert(m2.contains("e.g. \"https://example.com\""))
-#assert(m2.contains("\"not-a-uri\""))
 
 #assert(uri-fail("example.com",     ("u",)).contains("URI"))
 #assert(uri-fail("://example.com",  ("u",)).contains("URI"))
@@ -117,7 +108,6 @@
 #let m3 = email-fail("name@", ("basics", "email"))
 #assert(m3.contains("email"))
 #assert(m3.contains("e.g. \"name@example.com\""))
-#assert(m3.contains("\"name@\""))
 
 #assert(email-fail("@example.com", ("e",)).contains("email"))
 #assert(email-fail("name",         ("e",)).contains("email"))

@@ -21,7 +21,7 @@
 // canonical JSON Resume regexes — the upstream forms accept impossible
 // months (13-19) and days (32-39), case-mismatched URI schemes, and
 // domains with empty labels. Patterns are anchored with ^…$ so
-// `value.matches(re)` returns one match iff the whole string conforms.
+// `value.match(re)` succeeds iff the whole string conforms.
 //
 //  - date-string: iso8601 — YYYY, YYYY-MM, or YYYY-MM-DD. Month and
 //    day are constrained to real calendar ranges (01-12 / 01-31). Does
@@ -33,22 +33,24 @@
 //    contain at least one char and are separated by literal dots —
 //    rejects empty labels (e.g. `foo@bar..com`, `foo@host.`). Still
 //    permissive — does NOT enforce RFC 5322.
-#let _format-patterns = (
-  "date-string":  regex("^([1-2][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])|[1-2][0-9]{3}-(0[1-9]|1[0-2])|[1-2][0-9]{3})$"),
-  "uri-string":   regex("^[A-Za-z][A-Za-z0-9+.\-]*://\S+$"),
-  "email-string": regex("^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$"),
+//
+// Message intentionally omits the offending value — type-error keeps
+// the same "expected X" shape, and the path already names the field.
+// The canonical example in `expected` is the actionable hint.
+#let _format-specs = (
+  "date-string":  (
+    pattern: regex("^([1-2][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])|[1-2][0-9]{3}-(0[1-9]|1[0-2])|[1-2][0-9]{3})$"),
+    expected: "an ISO-8601 date (e.g. \"2024-01-15\")",
+  ),
+  "uri-string": (
+    pattern: regex("^[A-Za-z][A-Za-z0-9+.\-]*://\S+$"),
+    expected: "a URI (e.g. \"https://example.com\")",
+  ),
+  "email-string": (
+    pattern: regex("^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$"),
+    expected: "an email (e.g. \"name@example.com\")",
+  ),
 )
-
-#let _format-descriptions = (
-  "date-string":  "an ISO-8601 date (e.g. \"2024-01-15\")",
-  "uri-string":   "a URI (e.g. \"https://example.com\")",
-  "email-string": "an email (e.g. \"name@example.com\")",
-)
-
-#let _format-error(path, kind, value) = ((
-  path: path,
-  message: "expected " + _format-descriptions.at(kind) + ", got " + repr(value) + ".",
-),)
 
 #let _validate(schema, value, path) = {
   // Null at any value position is "key absent" — no error, no
@@ -61,10 +63,11 @@
     if type(value) != str { return _type-error(path, "string", value) }
     return ()
   }
-  if kind in ("date-string", "uri-string", "email-string") {
+  if kind in _format-specs {
     if type(value) != str { return _type-error(path, "string", value) }
-    if value.matches(_format-patterns.at(kind)).len() == 0 {
-      return _format-error(path, kind, value)
+    let spec = _format-specs.at(kind)
+    if value.match(spec.pattern) == none {
+      return ((path: path, message: "expected " + spec.expected + "."),)
     }
     return ()
   }
