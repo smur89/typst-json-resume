@@ -45,6 +45,9 @@
     assert(type(value) in (int, float), message: _expect("a number", value))
     return value
   }
+  // Enum members can be any JSON-native type — the validator already
+  // gated on membership, so coercion is just pass-through.
+  if kind == "enum" { return value }
   if kind == "array" {
     assert(type(value) == array, message: _expect("an array", value))
     // Drop null elements: a null in an array of strings would
