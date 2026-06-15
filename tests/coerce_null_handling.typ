@@ -19,6 +19,17 @@
 #assert.eq(_coerce(array-of(str-type), ("a", none, "c")), ("a", "c"))
 #assert.eq(_coerce(array-of(str-type), (none, none)), ())
 
+// Null elements inside an array of objects are dropped wholesale — the
+// surviving objects keep their full shape.
+#let work-item = object((name: str-type, position: str-type))
+#let work-coerced = _coerce(
+  array-of(work-item),
+  ((name: "Acme", position: "Engineer"), none, (name: "Globex", position: "PM")),
+)
+#assert.eq(work-coerced.len(), 2)
+#assert.eq(work-coerced.at(0), (name: "Acme", position: "Engineer"))
+#assert.eq(work-coerced.at(1), (name: "Globex", position: "PM"))
+
 #let chs = _coerce(array-of(content-type), (none, "first", none, "second"))
 #assert.eq(chs.len(), 2)
 #assert.eq(type(chs.at(0)), content)

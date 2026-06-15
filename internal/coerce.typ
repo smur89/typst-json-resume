@@ -56,8 +56,6 @@
       .map(((key, sub-value)) => (key, _coerce(schema.shape.at(key), sub-value)))
       .filter(((_, coerced)) => coerced != none)
       .to-dict()
-    // An object whose every key coerced to none is itself absent —
-    // propagates upward so the parent filter drops it.
     if coerced.len() == 0 { return none }
     return coerced
   }

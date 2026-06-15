@@ -21,6 +21,20 @@
 #assert.eq(_validate(array-of(str-type), ("a", none, "c"), ("keywords",)), ())
 #assert.eq(_validate(array-of(content-type), (none, "one", none), ("highlights",)), ())
 
+// Null elements inside an array of objects: each null element is treated
+// as "key absent" by the per-element early return, so the walk produces
+// no errors even when the live siblings would otherwise be required to
+// conform to the inner object shape.
+#let work-item = object((name: str-type, position: str-type))
+#assert.eq(
+  _validate(
+    array-of(work-item),
+    ((name: "Acme", position: "Engineer"), none, (name: "Globex", position: "Engineer")),
+    ("work",),
+  ),
+  (),
+)
+
 // Null where an object is expected: treated as absent.
 #let person = object((name: str-type, age: number-type))
 #assert.eq(_validate(person, none, ("basics",)), ())

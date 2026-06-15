@@ -42,8 +42,6 @@
     if type(value) != dictionary { return _type-error(path, "object", value) }
     let per-key-errs = value.pairs().map(((key, sub-value)) => {
       if key in schema.shape {
-        // Null sub-values are absorbed by the top-of-function early
-        // return on the recursive call — no need to special-case here.
         _validate(schema.shape.at(key), sub-value, path + (key,))
       } else {
         // Valid-keys list only assembled on the unknown-key branch so
@@ -57,10 +55,9 @@
         ),)
       }
     }).flatten()
-    let required = schema.at("required-keys", default: ())
     // A required key whose value is explicit null counts as missing —
-    // null-as-absent applies uniformly, including to the missing-
-    // required check.
+    // null-as-absent applies uniformly.
+    let required = schema.at("required-keys", default: ())
     let missing-errs = required
       .filter(k => k not in value or value.at(k) == none)
       .map(k => (

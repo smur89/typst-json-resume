@@ -23,6 +23,14 @@
         null,
         "Shipped the v2 settlement pipeline."
       ]
+    },
+    null,
+    {
+      "name": "Globex",
+      "position": "Staff Engineer",
+      "startDate": "2018-06",
+      "endDate": "2021-12",
+      "highlights": []
     }
   ],
   "skills": null,

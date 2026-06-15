@@ -37,6 +37,14 @@
 #assert.eq(type(model.work.at(0).highlights.at(0)), content)
 #assert.eq(type(model.work.at(0).highlights.at(1)), content)
 
+// A null entry inside an array of objects is dropped wholesale; the
+// surviving siblings are intact and indexable in order.
+#assert.eq(model.work.len(), 2)
+#assert.eq(model.work.at(1).name, "Globex")
+#assert.eq(model.work.at(1).position, "Staff Engineer")
+#assert.eq(model.work.at(1).startDate, "2018-06")
+#assert.eq(model.work.at(1).endDate, "2021-12")
+
 // Whole-section nulls disappear from the top-level model.
 #assert("skills" not in model)
 #assert("languages" not in model)
