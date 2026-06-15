@@ -49,6 +49,15 @@
 #assert(date-fail("",           ("d",)).contains("ISO-8601"))
 #assert(date-fail("2024-01-15T10:00", ("d",)).contains("ISO-8601"))
 
+// Calendar-range tightening — the canonical schema regex accepts
+// months 13-19 and days 32-39 because it uses [0-1][0-9] / [0-3][0-9].
+// We constrain to real ranges (01-12 / 01-31). Day=00 and month=00
+// are also rejected.
+#assert(date-fail("2024-13-15", ("d",)).contains("ISO-8601"))  // month > 12
+#assert(date-fail("2024-19-39", ("d",)).contains("ISO-8601"))  // month > 12 + day > 31
+#assert(date-fail("2024-00-15", ("d",)).contains("ISO-8601"))  // month = 00
+#assert(date-fail("2024-01-32", ("d",)).contains("ISO-8601"))  // day > 31
+
 // Wrong type yields a type-error, not a format-error — the format gate
 // only fires once we know we have a string.
 #let date-type-err = _validate(date-string, 2024, ("d",))
@@ -66,6 +75,11 @@
 #assert.eq(_validate(uri-string, "http://example.com/path",    ("u",)), ())
 #assert.eq(_validate(uri-string, "git+ssh://host/repo.git",    ("u",)), ())
 
+// RFC 3986 declares schemes case-insensitive — uppercase and mixed-case
+// schemes must validate.
+#assert.eq(_validate(uri-string, "HTTP://example.com",  ("u",)), ())
+#assert.eq(_validate(uri-string, "HTTPS://example.com", ("u",)), ())
+
 #let uri-fail(value, path) = {
   let errs = _validate(uri-string, value, path)
   assert.eq(errs.len(), 1, message: "expected one error for " + repr(value))
@@ -82,6 +96,10 @@
 #assert(uri-fail("://example.com",  ("u",)).contains("URI"))
 #assert(uri-fail("https://",        ("u",)).contains("URI"))
 #assert(uri-fail("",                ("u",)).contains("URI"))
+
+// Embedded whitespace — a space inside the rest is rejected so that a
+// fat-finger like `https://example.com /cv` doesn't quietly pass.
+#assert(uri-fail("https://example.com /cv", ("u",)).contains("URI"))
 
 // ---- email-string ---------------------------------------------------
 
@@ -106,6 +124,13 @@
 #assert(email-fail("name@host",    ("e",)).contains("email"))  // no dot in domain
 #assert(email-fail("a b@host.com", ("e",)).contains("email"))  // whitespace in local
 #assert(email-fail("",             ("e",)).contains("email"))
+
+// Empty labels in the domain — the previous pattern accepted these
+// because a greedy `[^@\s]+\.[^@\s]+` split could absorb the second
+// dot into one side. The per-label form rejects them.
+#assert(email-fail("foo@bar..com", ("e",)).contains("email"))  // double dot
+#assert(email-fail("foo@.com",     ("e",)).contains("email"))  // leading dot
+#assert(email-fail("foo@host.",    ("e",)).contains("email"))  // trailing dot
 
 // ---- Nested under array-of / object: paths stay correct -------------
 

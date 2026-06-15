@@ -17,21 +17,26 @@
   message: "expected " + expected + ", got " + _type-name-of(value) + ".",
 ),)
 
-// Format-specialised string kinds use canonical JSON Resume regexes
-// (or permissive shape checks where the spec only says "uri" / "email").
-// Patterns are anchored with ^…$ so `value.matches(re)` returns one
-// match iff the whole string conforms.
+// Format-specialised string kinds use tightened patterns over the
+// canonical JSON Resume regexes — the upstream forms accept impossible
+// months (13-19) and days (32-39), case-mismatched URI schemes, and
+// domains with empty labels. Patterns are anchored with ^…$ so
+// `value.matches(re)` returns one match iff the whole string conforms.
 //
-//  - date-string: iso8601 — YYYY, YYYY-MM, or YYYY-MM-DD. Canonical
-//    schema regex (see https://github.com/jsonresume/resume-schema).
-//  - uri-string:  scheme `[a-z][a-z0-9+.-]*`, then `://`, then non-empty
-//    rest. Permissive — does NOT enforce RFC 3986.
-//  - email-string: non-empty local + `@` + non-empty domain with at
-//    least one dot. Permissive — does NOT enforce RFC 5322.
+//  - date-string: iso8601 — YYYY, YYYY-MM, or YYYY-MM-DD. Month and
+//    day are constrained to real calendar ranges (01-12 / 01-31). Does
+//    NOT cross-check month against day count (e.g. 2024-02-31 passes).
+//  - uri-string:  scheme `[A-Za-z][A-Za-z0-9+.-]*` (RFC 3986 declares
+//    schemes case-insensitive), then `://`, then one-or-more
+//    non-whitespace chars. Permissive — does NOT enforce RFC 3986.
+//  - email-string: non-empty local + `@` + domain whose labels each
+//    contain at least one char and are separated by literal dots —
+//    rejects empty labels (e.g. `foo@bar..com`, `foo@host.`). Still
+//    permissive — does NOT enforce RFC 5322.
 #let _format-patterns = (
-  "date-string":  regex("^([1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]|[1-2][0-9]{3}-[0-1][0-9]|[1-2][0-9]{3})$"),
-  "uri-string":   regex("^[a-z][a-z0-9+.\-]*://.+$"),
-  "email-string": regex("^[^@\s]+@[^@\s]+\.[^@\s]+$"),
+  "date-string":  regex("^([1-2][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])|[1-2][0-9]{3}-(0[1-9]|1[0-2])|[1-2][0-9]{3})$"),
+  "uri-string":   regex("^[A-Za-z][A-Za-z0-9+.\-]*://\S+$"),
+  "email-string": regex("^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$"),
 )
 
 #let _format-descriptions = (
