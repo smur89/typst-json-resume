@@ -220,8 +220,12 @@ Supported JSON Schema keywords: `type` (`string`/`number`/`integer`/`array`/
 `object`), `format` (`uri`/`email`/`date`/`date-time` — currently degraded to
 plain string until format-aware combinators land), `properties`, `required`,
 `items`, internal `$ref` (`#/definitions/…` / `#/$defs/…`). Out of scope:
-`allOf` / `anyOf` / `oneOf` / `enum` / external `$ref` — those panic with a
-clear "unsupported" message.
+`allOf` / `anyOf` / `oneOf` / `not`, `enum` / `const`,
+`if` / `then` / `else`, `dependencies` (and the `dependentRequired` /
+`dependentSchemas` variants), open object schemas (`type: "object"` without
+`properties`), `type: [...]` union arrays, external `$ref`, and string formats
+other than the four listed above — every one of these panics with a clear
+"unsupported" message rather than silently dropping the constraint.
 
 ## Scope
 

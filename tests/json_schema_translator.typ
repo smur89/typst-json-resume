@@ -20,6 +20,10 @@
   schema-from-json-schema((type: "string", format: "date")),
   str-type,
 )
+#assert.eq(
+  schema-from-json-schema((type: "string", format: "date-time")),
+  str-type,
+)
 
 #assert.eq(
   schema-from-json-schema((type: "array", items: (type: "string"))),

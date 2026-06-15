@@ -39,6 +39,9 @@
 #let _from-json-schema(js, root, seen) = {
   if "$ref" in js {
     let ref = js.at("$ref")
+    if type(ref) != str {
+      _bail("\"$ref\" must be a string, got: " + repr(type(ref)) + ".")
+    }
     return _from-json-schema(
       _resolve-ref(ref, root, seen),
       root,
@@ -69,6 +72,9 @@
     if items == none {
       _bail("array schema missing \"items\".")
     }
+    if type(items) != dictionary {
+      _bail("\"items\" must be a schema object, got: " + repr(type(items)) + ".")
+    }
     return array-of(_from-json-schema(items, root, seen))
   }
   if t == "object" {
@@ -81,7 +87,13 @@
       )
     }
     let props = js.at("properties")
+    if type(props) != dictionary {
+      _bail("\"properties\" must be an object, got: " + repr(type(props)) + ".")
+    }
     let required = js.at("required", default: ())
+    if type(required) != array {
+      _bail("\"required\" must be an array of field names, got: " + repr(type(required)) + ".")
+    }
     return object(
       props.pairs().map(((k, v)) => (k, _from-json-schema(v, root, seen))).to-dict(),
       required-keys: required,
