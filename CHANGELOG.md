@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/smur89/gairm-import/compare/v0.5.1...v0.6.0) (2026-06-16)
+
+
+### Features
+
+* datetime-string kind for format: date-time fields ([#55](https://github.com/smur89/gairm-import/issues/55)) ([bfa6ce5](https://github.com/smur89/gairm-import/commit/bfa6ce5ce90cc3bf984a376dad84a95260b3f4dc))
+* suggest closest matching key in unknown-key error messages ([#19](https://github.com/smur89/gairm-import/issues/19)) ([9769de5](https://github.com/smur89/gairm-import/commit/9769de5f83d177ce03e27319b59b6df14d1b38a9))
+
 ## [0.5.1](https://github.com/smur89/gairm-import/compare/v0.5.0...v0.5.1) (2026-06-16)
 
 
