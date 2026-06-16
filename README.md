@@ -406,8 +406,9 @@ and `kind-at` answer the three usual questions — *what does this thing
 look like?*, *where do my date strings live?*, *what kind is at this
 path?* — without `repr(schema)` or hand-walking `.shape`:
 
+<!-- x-release-please-start-version -->
 ```typst
-#import "@preview/json-resume:0.5.0": ( // x-release-please-version
+#import "@preview/gairm-import:0.6.0": (
   resume-schema-strict, describe-schema, paths-of-kind, kind-at,
 )
 
@@ -430,6 +431,7 @@ path?* — without `repr(schema)` or hand-walking `.shape`:
 // Kind at a single path — thin wrapper over lens-get.
 #kind-at(resume-schema-strict, ("basics", "summary"))  // "content"
 ```
+<!-- x-release-please-end -->
 
 Array segments in returned path tuples use `"items"` so they plug
 straight into `lens(path)`; the `[]` suffix in `describe-schema`'s
