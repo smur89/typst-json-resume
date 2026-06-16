@@ -48,3 +48,4 @@
 // shape in translation.
 #let raw = json("fixtures/resume_full.json")
 #assert.eq(validate(raw, schema: canonical), ())
+#assert.eq(validate(raw, schema: canonical-from-path), ())

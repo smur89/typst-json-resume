@@ -80,7 +80,7 @@ string are also accepted — useful on older callers or when you've
 already loaded the document yourself:
 
 ```typst
-// Already-parsed dict.
+// json() resolves the path against your .typ; parse takes the dict.
 #let resume = parse(json("resume.json"))
 
 // Typst-root-relative path string, resolved by parse itself.
