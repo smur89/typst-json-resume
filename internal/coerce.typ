@@ -45,6 +45,20 @@
     assert(type(value) in (int, float), message: _expect("a number", value))
     return value
   }
+  if kind == "bool" {
+    assert(type(value) == bool, message: _expect("a boolean", value))
+    return value
+  }
+  // Reachable only via a direct _coerce call that skipped validate
+  // — the top-of-function `none` early return handles the only
+  // legitimate input.
+  if kind == "null" {
+    assert(false, message: _expect("null", value))
+  }
+  // Wrapper: `none` was already returned at the top; defer to inner.
+  if kind == "nullable" {
+    return _coerce(schema.inner, value)
+  }
   // Members are polymorphic — no single type to assert. Mirror the
   // validator's membership check so direct-coerce callers fail loud.
   if kind == "enum" {

@@ -6,6 +6,15 @@
 #let str-type     = (kind: "str")
 #let content-type = (kind: "content")
 #let number-type  = (kind: "number")
+#let bool-type    = (kind: "bool")
+
+// Standalone `null-type` is degenerate (a value-position `none` is
+// always treated as "key absent" by the engine — see the early
+// return in _validate / _coerce — so this kind never fires on a
+// non-none input). Exists so `type: "null"` from JSON Schema
+// translates to *something* instead of panicking, and so `nullable`
+// has a target to wrap.
+#let null-type    = (kind: "null")
 
 // Format-specialised string kinds — regex-gated in _validate;
 // deliberately permissive (reject obvious malformations, not full RFC).
@@ -23,6 +32,13 @@
 )
 
 #let array-of(elem) = (kind: "array", elem: elem)
+
+// Wrapper that accepts `none` OR delegates to `inner`. Translator
+// uses this for the common nullable union `type: [X, "null"]`. The
+// engine's "null-as-absent" early return already accepts `none` at
+// any value position, so the wrapper is only load-bearing where
+// callers want explicit-nullable semantics in their own schemas.
+#let nullable(inner) = (kind: "nullable", inner: inner)
 
 // Mixed-type members allowed — the validator's `in` check gates on
 // equality, not type. `const` is a singleton enum.

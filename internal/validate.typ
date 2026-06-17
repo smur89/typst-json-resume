@@ -81,6 +81,17 @@
     if type(value) not in (int, float) { return _type-error(path, "number", value) }
     return ()
   }
+  if kind == "bool" {
+    if type(value) != bool { return _type-error(path, "boolean", value) }
+    return ()
+  }
+  // The early `value == none` return handles the success path for
+  // `null` — every input that reaches this branch is non-none and
+  // therefore a type error.
+  if kind == "null" { return _type-error(path, "null", value) }
+  // Wrapper: `none` was already returned successfully at the top;
+  // any other value is delegated to the inner schema.
+  if kind == "nullable" { return _validate(schema.inner, value, path) }
   if kind == "array" {
     if type(value) != array { return _type-error(path, "array", value) }
     return value.enumerate()

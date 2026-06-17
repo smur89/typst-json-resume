@@ -2,7 +2,8 @@
 // not supported panics rather than silently dropping the constraint.
 
 #import "kinds.typ": (
-  str-type, content-type, number-type, array-of, object,
+  str-type, content-type, number-type, bool-type, null-type,
+  array-of, nullable, object,
   date-string, datetime-string, uri-string, email-string, pattern-string,
   enum-of, const-of,
 )
@@ -129,13 +130,23 @@
       required-keys: required,
     )
   }
-  if t in ("boolean", "null") {
-    _bail("unsupported JSON Schema type: " + repr(t) + ".")
-  }
+  if t == "boolean" { return bool-type }
+  if t == "null" { return null-type }
   if type(t) == array {
-    // null-as-absent already covers the common `["string", "null"]`
-    // nullable case at the validator level, so unions aren't needed.
-    _bail("union `type` arrays are unsupported, got: " + repr(t) + ".")
+    // Only [X, "null"] (or ["null", X]) — the standard JSON Schema
+    // nullable-wrap idiom — is supported. Multi-non-null unions
+    // would need a discriminated-union mechanism the engine doesn't
+    // model; explicit rejection here keeps the error grep-able.
+    if t.len() == 2 and "null" in t {
+      let non-null = t.filter(x => x != "null")
+      if non-null.len() == 1 {
+        return nullable(_from-json-schema((..js, type: non-null.at(0)), root, seen))
+      }
+    }
+    _bail(
+      "union `type` arrays are only supported as nullable wraps `[X, \"null\"]`, got: "
+        + repr(t) + "."
+    )
   }
   _bail("unrecognised JSON Schema fragment (no recognised \"type\" or \"$ref\"); keys: " + repr(js.keys()) + ".")
 }
