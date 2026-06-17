@@ -299,33 +299,24 @@ clause are rejected. (Upstream JSON Resume sets `additionalProperties: true`
 on every section's items, so extras in those positions pass through — see
 the note further down on `additionalProperties`.)
 
-Renderers that need their own fields (alta-typst's `preferences`, `labels`,
-`focusAreas`; numeric language `rating`; publication `type` grouping; …)
-can build a JSON-Resume+ schema with the public combinators and pass it to
-`parse` / `validate` / `coerce` via the `schema:` keyword:
+Renderers that expect their own top-level fields in the resume document
+(e.g. alta-typst's `focusAreas`) can build a JSON-Resume+ schema with the
+public combinators and pass it to `parse` / `validate` / `coerce` via the
+`schema:` keyword:
 
 <!-- x-release-please-start-version -->
 ```typst
 #import "@preview/gairm-import:0.8.0": (
-  resume-schema, parse, object, array-of, str-type, content-type,
+  resume-schema, parse, object, array-of, content-type,
 )
 
-// Splice the canonical shape and add renderer-specific fields.
+// Splice the canonical shape and add a renderer-specific field.
 #let altacv-schema = object((
   ..resume-schema.shape,
-  preferences: object((
-    accent: str-type,
-    headerLayout: str-type,
-  )),
-  labels: object((
-    work: str-type,
-    education: str-type,
-  )),
   focusAreas: array-of(content-type),
 ))
 
 #let model = parse(path("resume.json"), schema: altacv-schema)
-// render model with the renderer's own theme…
 ```
 <!-- x-release-please-end -->
 
