@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <sub><em>"gairm" is the Irish word for <em>call</em> (and <em>vocation</em>) — fittingly, this package calls JSON-Schema-shaped data into Typst; it began life loading JSON Resume.</em></sub>
+  <sub><em>"gairm" is the Irish word for vocation — a nod to the package's origin as a JSON Resume loader, retained as the engine broadened.</em></sub>
 </p>
 
 The engine is a pair of pure functions of `(schema, value)` — `validate` returns a
