@@ -210,8 +210,7 @@
   if t == "object" {
     let has-props = "properties" in js
     let has-ap = "additionalProperties" in js
-    // Without either, the schema is fully open — engine is strict by
-    // design and can't represent that without inverting intent.
+    // Fully open with no constraints inverts the engine's strict intent.
     if not has-props and not has-ap {
       _bail(
         "open object schemas (`type: \"object\"` with no `properties` " +
@@ -231,11 +230,10 @@
       none
     } else {
       let ap = js.at("additionalProperties")
-      if ap == false { none }                         // strict — same as default
-      else if ap == true { true }                     // pass-through
-      else if type(ap) == dictionary {                // typed extras
-        _from-json-schema(ap, root, seen)
-      } else {
+      if ap == false { none }
+      else if ap == true { true }
+      else if type(ap) == dictionary { _from-json-schema(ap, root, seen) }
+      else {
         _bail("\"additionalProperties\" must be a schema, true, or false, got: " + repr(ap) + ".")
       }
     }

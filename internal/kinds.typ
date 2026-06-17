@@ -34,13 +34,10 @@
 #let enum-of(values) = (kind: "enum", values: values)
 #let const-of(value) = enum-of((value,))
 
-// `additional` controls keys not in `shape`:
-//   none (default) — reject as unknown ("Did you mean …?" fuzzy match)
-//   true           — allow without validation
-//   <schema dict>  — allow, validate every value against this schema
-//
-// Reject required-keys that don't appear in shape so a schema typo
-// fails at construction time, not as a phantom validation error.
+// `additional` for keys not in `shape`: `none` → reject; `true` →
+// pass-through; schema dict → validate every extra against it.
+// required-keys mismatch fails at construction, not as a phantom
+// validation error.
 #let object(shape, required-keys: (), additional: none) = {
   let unknown = required-keys.filter(k => k not in shape)
   assert(
@@ -53,10 +50,8 @@
     shape: shape,
     required-keys: required-keys,
   )
-  // Omit the field on the default (strict) path — keeps dict shape
-  // identical for schemas that don't use additionalProperties.
+  // Omitted when `none` so existing strict dicts keep their shape.
   if additional == none { base } else { (..base, additional: additional) }
 }
 
-// Convenience: a pure "any string → value-schema" map.
 #let map(value-schema) = object((:), additional: value-schema)

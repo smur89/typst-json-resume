@@ -174,7 +174,6 @@
       if key in schema.shape {
         _validate(schema.shape.at(key), sub-value, path + (key,))
       } else if additional == true {
-        // additionalProperties: true — pass through without checks.
         ()
       } else if additional != none {
         _validate(additional, sub-value, path + (key,))
