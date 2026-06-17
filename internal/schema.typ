@@ -5,7 +5,7 @@
 
 #import "kinds.typ": (
   str-type, content-type, number-type, bool-type, null-type,
-  array-of, nullable, object,
+  array-of, object,
   date-string, datetime-string, uri-string, email-string, pattern-string,
   enum-of, const-of,
 )

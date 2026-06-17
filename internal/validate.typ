@@ -85,13 +85,9 @@
     if type(value) != bool { return _type-error(path, "boolean", value) }
     return ()
   }
-  // The early `value == none` return handles the success path for
-  // `null` — every input that reaches this branch is non-none and
-  // therefore a type error.
+  // Success path is the top-of-function `none` early return; here
+  // the value is non-none and therefore wrong.
   if kind == "null" { return _type-error(path, "null", value) }
-  // Wrapper: `none` was already returned successfully at the top;
-  // any other value is delegated to the inner schema.
-  if kind == "nullable" { return _validate(schema.inner, value, path) }
   if kind == "array" {
     if type(value) != array { return _type-error(path, "array", value) }
     return value.enumerate()

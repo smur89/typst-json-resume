@@ -493,8 +493,7 @@ Supported JSON Schema keywords: `type` (`string`/`number`/`integer`/`array`/
 need both), `enum` → `enum-of`, `const` → `const-of`,
 `properties`, `required`, `items`, internal `$ref`
 (`#/definitions/…` / `#/$defs/…`), and `type: [X, "null"]` nullable unions
-(any two-arity `type` array containing `"null"` wraps the non-null
-half in `nullable`).
+(under the engine's null-as-absent policy these translate to plain `X`).
 Out of scope: `allOf` / `anyOf` / `oneOf` / `not`,
 `if` / `then` / `else`, `dependencies` (and the `dependentRequired` /
 `dependentSchemas` variants), open object schemas (`type: "object"` without
