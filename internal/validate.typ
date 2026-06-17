@@ -12,12 +12,12 @@
 
 #import "errors.typ": _type-name-of, _closest-match
 
-#let _type-error(path, expected, value) = ((
-  path: path,
-  message: "expected " + expected + ", got " + _type-name-of(value) + ".",
-),)
-
 #let _err(path, msg) = ((path: path, message: msg),)
+
+#let _type-error(path, expected, value) = _err(
+  path,
+  "expected " + expected + ", got " + _type-name-of(value) + ".",
+)
 
 // Clusters, not bytes — JSON Schema talks "length" without pinning.
 #let _string-length-errs(schema, value, path) = {
@@ -127,17 +127,17 @@
   }
   if kind == "enum" {
     if value in schema.values { return () }
-    return ((
-      path: path,
-      message: "expected one of " + schema.values.map(repr).join(", ") +
+    return _err(
+      path,
+      "expected one of " + schema.values.map(repr).join(", ") +
         ", got " + repr(value) + ".",
-    ),)
+    )
   }
   if kind in _format-specs {
     if type(value) != str { return _type-error(path, "string", value) }
     let spec = _format-specs.at(kind)
     if value.match(spec.pattern) == none {
-      return ((path: path, message: "expected " + spec.expected + "."),)
+      return _err(path, "expected " + spec.expected + ".")
     }
     return _string-length-errs(schema, value, path)
   }
@@ -146,7 +146,7 @@
   if kind == "pattern-string" {
     if type(value) != str { return _type-error(path, "string", value) }
     if value.match(schema.pattern) == none {
-      return ((path: path, message: "expected " + schema.expected + "."),)
+      return _err(path, "expected " + schema.expected + ".")
     }
     return _string-length-errs(schema, value, path)
   }
@@ -187,10 +187,7 @@
         } else {
           "Valid keys: " + schema.shape.keys().join(", ") + "."
         }
-        ((
-          path: path + (key,),
-          message: "unknown key " + repr(key) + ". " + tail,
-        ),)
+        _err(path + (key,), "unknown key " + repr(key) + ". " + tail)
       }
     }).flatten()
     // A required key whose value is explicit null counts as missing —
@@ -198,10 +195,8 @@
     let required = schema.at("required-keys", default: ())
     let missing-errs = required
       .filter(k => k not in value or value.at(k) == none)
-      .map(k => (
-        path: path + (k,),
-        message: "missing required key " + repr(k) + ".",
-      ))
+      .map(k => _err(path + (k,), "missing required key " + repr(k) + "."))
+      .flatten()
     return per-key-errs + missing-errs
   }
   panic("gairm-import: internal — unknown schema kind " + repr(kind))

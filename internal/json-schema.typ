@@ -65,10 +65,35 @@
   v
 }
 
+// Cross-constraint contradictions (min > max, etc.) translate cleanly
+// but reject every input — catch them up front so the diagnostic
+// fires at translate time, not as a mystery validation failure.
+#let _require-ordered(lower-key, lower, upper-key, upper, sep) = {
+  if lower != none and upper != none and not (lower <= upper) {
+    _bail(
+      lower-key + " (" + repr(lower) + ") " + sep + " " +
+        upper-key + " (" + repr(upper) + ") is unsatisfiable.",
+    )
+  }
+}
+#let _require-strict(lower-key, lower, upper-key, upper) = {
+  if lower != none and upper != none and not (lower < upper) {
+    _bail(
+      lower-key + " (" + repr(lower) + ") and " + upper-key + " (" +
+        repr(upper) + ") leave no satisfying value.",
+    )
+  }
+}
+
 #let _with-string-constraints(js, dict) = {
   let result = dict
   if "minLength" in js { result.insert("min-length", _require-nonneg-int(js, "minLength")) }
   if "maxLength" in js { result.insert("max-length", _require-nonneg-int(js, "maxLength")) }
+  _require-ordered(
+    "minLength", result.at("min-length", default: none),
+    "maxLength", result.at("max-length", default: none),
+    ">",
+  )
   result
 }
 
@@ -83,6 +108,17 @@
     if v <= 0 { _bail("\"multipleOf\" must be > 0, got: " + repr(v) + ".") }
     result.insert("multiple-of", v)
   }
+  let mn = result.at("minimum", default: none)
+  let mx = result.at("maximum", default: none)
+  let emn = result.at("exclusive-minimum", default: none)
+  let emx = result.at("exclusive-maximum", default: none)
+  _require-ordered("minimum", mn, "maximum", mx, ">")
+  // Exclusive bound leaves no value when it meets/crosses an inclusive
+  // bound on the same side (e.g. exclusiveMinimum: 5 demands > 5,
+  // maximum: 5 demands ≤ 5).
+  _require-strict("exclusiveMinimum", emn, "maximum", mx)
+  _require-strict("minimum", mn, "exclusiveMaximum", emx)
+  _require-strict("exclusiveMinimum", emn, "exclusiveMaximum", emx)
   result
 }
 
@@ -97,6 +133,11 @@
     }
     if v { result.insert("unique-items", true) }
   }
+  _require-ordered(
+    "minItems", result.at("min-items", default: none),
+    "maxItems", result.at("max-items", default: none),
+    ">",
+  )
   result
 }
 

@@ -143,6 +143,42 @@
 #assert(src.contains("must be a number"))
 #assert(src.contains("must be > 0"))
 #assert(src.contains("must be a boolean"))
+#assert(src.contains("is unsatisfiable"))
+#assert(src.contains("leave no satisfying value"))
+
+// --- end-to-end roundtrip: translator → validator catches field typos
+//
+// Each constraint goes source → schema-from-json-schema → validate.
+// If either side has a typo in the kebab-case field name (translator
+// emits "min-length", validator reads "min-length"), the validator
+// would silently return () instead of firing. Each assertion below
+// pins both halves.
+
+#let _expect-error(src-schema, input) = {
+  let errs = validate(input, schema: schema-from-json-schema(src-schema))
+  assert(errs.len() > 0, message: "expected ≥1 error for " + repr(input))
+  errs.at(0)
+}
+
+#assert(_expect-error((type: "string", minLength: 3), "ab").message.contains("≥ 3"))
+#assert(_expect-error((type: "string", maxLength: 3), "abcd").message.contains("≤ 3"))
+#assert(_expect-error((type: "number", minimum: 1), 0).message.contains("≥ 1"))
+#assert(_expect-error((type: "number", maximum: 10), 11).message.contains("≤ 10"))
+#assert(_expect-error((type: "number", exclusiveMinimum: 1), 1).message.contains("> 1"))
+#assert(_expect-error((type: "number", exclusiveMaximum: 10), 10).message.contains("< 10"))
+#assert(_expect-error((type: "number", multipleOf: 3), 10).message.contains("multiple of 3"))
+#assert(_expect-error(
+  (type: "array", items: (type: "string"), minItems: 2),
+  ("a",),
+).message.contains("≥ 2"))
+#assert(_expect-error(
+  (type: "array", items: (type: "string"), maxItems: 1),
+  ("a", "b"),
+).message.contains("≤ 1"))
+#assert(_expect-error(
+  (type: "array", items: (type: "string"), uniqueItems: true),
+  ("a", "a"),
+).message.contains("duplicate"))
 
 // --- null-as-absent applies to array constraints --------------------
 //
