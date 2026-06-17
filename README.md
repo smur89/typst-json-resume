@@ -501,17 +501,30 @@ need both), `enum` → `enum-of`, `const` → `const-of`,
 `properties`, `required`, `items`, internal `$ref`
 (`#/definitions/…` / `#/$defs/…`), `type: [X, "null"]` nullable unions
 (under the engine's null-as-absent policy these translate to plain `X`),
-and constraint keywords on strings (`minLength` / `maxLength`), numbers
+constraint keywords on strings (`minLength` / `maxLength`), numbers
 (`minimum` / `maximum` / `exclusiveMinimum` / `exclusiveMaximum` /
-`multipleOf`), and arrays (`minItems` / `maxItems` / `uniqueItems`) —
-bake onto the kind dict as kebab-case fields and validate inline.
+`multipleOf`), and arrays (`minItems` / `maxItems` / `uniqueItems`)
+— baked onto the kind dict as kebab-case fields and validated
+inline — and `additionalProperties` (a schema, `true`, or `false`
+— `false` matches the strict default; `true` permits extras without
+validation; a schema validates every extra against it, also reachable
+via the `map(value-schema)` combinator).
 Out of scope: `allOf` / `anyOf` / `oneOf` / `not`,
 `if` / `then` / `else`, `dependencies` (and the `dependentRequired` /
-`dependentSchemas` variants), open object schemas (`type: "object"` without
-`properties`), `type: [...]` unions with more than one non-null member,
-external `$ref`, and string formats other than the four listed above —
-every one of these panics with a clear "unsupported" message rather
-than silently dropping the constraint.
+`dependentSchemas` variants), `type: "object"` with neither `properties`
+nor `additionalProperties` (fully open),
+`type: [...]` unions with more than one non-null member, external `$ref`,
+and string formats other than the four listed above — every one of these
+panics with a clear "unsupported" message rather than silently dropping
+the constraint.
+
+A note on the canonical `resume-schema` and `additionalProperties`:
+the upstream JSON Resume document declares `additionalProperties: true`
+on every section's items, so the canonical schema accepts extras at
+runtime even though the README's headline framing is "strict". Strict
+applies to declared fields; `additionalProperties: true` from upstream
+is honoured. If you need stricter behaviour, edit the schema with
+`lens-put` to strip the `additional: true` field.
 
 ## Scope
 

@@ -34,18 +34,29 @@
 #let enum-of(values) = (kind: "enum", values: values)
 #let const-of(value) = enum-of((value,))
 
+// `additional` controls keys not in `shape`:
+//   none (default) — reject as unknown ("Did you mean …?" fuzzy match)
+//   true           — allow without validation
+//   <schema dict>  — allow, validate every value against this schema
+//
 // Reject required-keys that don't appear in shape so a schema typo
 // fails at construction time, not as a phantom validation error.
-#let object(shape, required-keys: ()) = {
+#let object(shape, required-keys: (), additional: none) = {
   let unknown = required-keys.filter(k => k not in shape)
   assert(
     unknown.len() == 0,
     message: "gairm-import: object() required-keys references keys not in shape: " +
       unknown.join(", ") + ".",
   )
-  (
+  let base = (
     kind: "object",
     shape: shape,
     required-keys: required-keys,
   )
+  // Omit the field on the default (strict) path — keeps dict shape
+  // identical for schemas that don't use additionalProperties.
+  if additional == none { base } else { (..base, additional: additional) }
 }
+
+// Convenience: a pure "any string → value-schema" map.
+#let map(value-schema) = object((:), additional: value-schema)
