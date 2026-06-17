@@ -1,6 +1,6 @@
-// Typst can't catch panics, so source-level substring assertions are
-// the closest available proxy for "this message survives refactors".
-// Same approach as tests/lens_panic_messages.typ.
+// Source-level pin pattern — see tests/lens_panic_messages.typ for
+// the basic shape and tests/json_schema_panic_messages.typ for the
+// coverage + substring rules.
 
 #let src = read("../internal/coerce.typ")
 
