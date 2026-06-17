@@ -17,6 +17,77 @@
   message: "expected " + expected + ", got " + _type-name-of(value) + ".",
 ),)
 
+#let _err(path, msg) = ((path: path, message: msg),)
+
+// Length in clusters (user-perceived chars) — the unit JSON Schema
+// implies but never pins.
+#let _string-length-errs(schema, value, path) = {
+  let min = schema.at("min-length", default: none)
+  let max = schema.at("max-length", default: none)
+  if min == none and max == none { return () }
+  let n = value.clusters().len()
+  let errs = ()
+  if min != none and n < min {
+    errs += _err(path, "expected string length ≥ " + str(min) + ", got " + str(n) + ".")
+  }
+  if max != none and n > max {
+    errs += _err(path, "expected string length ≤ " + str(max) + ", got " + str(n) + ".")
+  }
+  errs
+}
+
+#let _number-range-errs(schema, value, path) = {
+  let errs = ()
+  let mn = schema.at("minimum", default: none)
+  if mn != none and value < mn {
+    errs += _err(path, "expected ≥ " + str(mn) + ", got " + str(value) + ".")
+  }
+  let mx = schema.at("maximum", default: none)
+  if mx != none and value > mx {
+    errs += _err(path, "expected ≤ " + str(mx) + ", got " + str(value) + ".")
+  }
+  let emn = schema.at("exclusive-minimum", default: none)
+  if emn != none and value <= emn {
+    errs += _err(path, "expected > " + str(emn) + ", got " + str(value) + ".")
+  }
+  let emx = schema.at("exclusive-maximum", default: none)
+  if emx != none and value >= emx {
+    errs += _err(path, "expected < " + str(emx) + ", got " + str(value) + ".")
+  }
+  let mult = schema.at("multiple-of", default: none)
+  if mult != none and calc.rem(value, mult) != 0 {
+    errs += _err(path, "expected multiple of " + str(mult) + ", got " + str(value) + ".")
+  }
+  errs
+}
+
+// uniqueItems uses pairwise `==`: Typst already compares dicts/arrays
+// deeply, and the schemas this targets don't hit arrays large enough
+// for O(n²) to matter.
+#let _array-constraint-errs(schema, value, path) = {
+  let errs = ()
+  let n = value.len()
+  let min = schema.at("min-items", default: none)
+  if min != none and n < min {
+    errs += _err(path, "expected array length ≥ " + str(min) + ", got " + str(n) + ".")
+  }
+  let max = schema.at("max-items", default: none)
+  if max != none and n > max {
+    errs += _err(path, "expected array length ≤ " + str(max) + ", got " + str(n) + ".")
+  }
+  if schema.at("unique-items", default: false) {
+    for i in range(n) {
+      for j in range(i + 1, n) {
+        if value.at(i) == value.at(j) {
+          errs += _err(path, "expected unique items, duplicate at indices " + str(i) + " and " + str(j) + ".")
+          return errs
+        }
+      }
+    }
+  }
+  errs
+}
+
 // Tightened over the upstream JSON Resume regexes, which accept
 // impossible months / days because they use [0-1][0-9] / [0-3][0-9].
 // Deliberately permissive (no full RFC compliance). Message omits the
@@ -50,7 +121,7 @@
   let kind = schema.kind
   if kind in ("str", "content") {
     if type(value) != str { return _type-error(path, "string", value) }
-    return ()
+    return _string-length-errs(schema, value, path)
   }
   if kind == "enum" {
     if value in schema.values { return () }
@@ -66,7 +137,7 @@
     if value.match(spec.pattern) == none {
       return ((path: path, message: "expected " + spec.expected + "."),)
     }
-    return ()
+    return _string-length-errs(schema, value, path)
   }
   // pattern + hint travel on the schema node rather than via the
   // _format-specs table above, since each instance is unique.
@@ -75,11 +146,11 @@
     if value.match(schema.pattern) == none {
       return ((path: path, message: "expected " + schema.expected + "."),)
     }
-    return ()
+    return _string-length-errs(schema, value, path)
   }
   if kind == "number" {
     if type(value) not in (int, float) { return _type-error(path, "number", value) }
-    return ()
+    return _number-range-errs(schema, value, path)
   }
   if kind == "bool" {
     if type(value) != bool { return _type-error(path, "boolean", value) }
@@ -89,9 +160,10 @@
   if kind == "null" { return _type-error(path, "null", value) }
   if kind == "array" {
     if type(value) != array { return _type-error(path, "array", value) }
-    return value.enumerate()
+    let elem-errs = value.enumerate()
       .map(((i, elem)) => _validate(schema.elem, elem, path + (i,)))
       .flatten()
+    return elem-errs + _array-constraint-errs(schema, value, path)
   }
   if kind == "object" {
     if type(value) != dictionary { return _type-error(path, "object", value) }
