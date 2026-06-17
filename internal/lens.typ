@@ -17,9 +17,9 @@
 // both a literal property in `shape` and the additionalProperties
 // keyword name, the literal property wins (meta-schemas are the
 // realistic case where this collision arises). Reach the
-// additional-schema in that rare collision case via
-// `lens-over(parent-lens, schema, p => p.additional)` instead of a
-// path segment.
+// additional-schema in that rare collision case via lens-over on the
+// parent — `p => p.additional` to read, `p => (..p, additional: new)`
+// to write.
 //
 // `lens-put` writes the replacement value verbatim — it doesn't
 // validate that the value is a well-formed schema dict at any
@@ -96,13 +96,13 @@
   let new-sub = _set-at(_descend(schema, head), rest, value)
   // Mirror _descend's shape-first precedence so a literal property
   // named "additionalProperties" rewrites the shape entry, not the
-  // additional schema.
+  // additional schema. _descend already bailed on any other invalid
+  // object segment, so the additionalProperties branch is the only
+  // remaining object case.
   if schema.kind == "object" and head in schema.shape {
     _with-shape-set(schema, head, new-sub)
-  } else if schema.kind == "object" and head == "additionalProperties" {
-    (..schema, additional: new-sub)
   } else if schema.kind == "object" {
-    _with-shape-set(schema, head, new-sub)
+    (..schema, additional: new-sub)
   } else {
     (..schema, elem: new-sub)
   }
