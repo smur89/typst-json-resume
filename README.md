@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <sub><em>"gairm" is the Irish word for vocation — a nod to the package's origin as a JSON Resume loader, retained as the engine broadened.</em></sub>
+  <sub><em>"gairm" is Irish for vocation. The package was originally a JSON Resume loader.</em></sub>
 </p>
 
 The engine is a pair of pure functions of `(schema, value)` — `validate` returns a
