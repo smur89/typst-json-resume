@@ -36,10 +36,26 @@
 
 // `additional` for keys not in `shape`: `none` → reject; `true` →
 // pass-through; schema dict → validate every extra against it.
-// required-keys mismatch fails at construction, not as a phantom
-// validation error.
+// Bad-shape `additional` and required-keys-not-covered both fail at
+// construction, not as a phantom validation error.
 #let object(shape, required-keys: (), additional: none) = {
-  let unknown = required-keys.filter(k => k not in shape)
+  let additional-ok = (
+    additional == none
+      or additional == true
+      or (type(additional) == dictionary and "kind" in additional)
+  )
+  assert(
+    additional-ok,
+    message: "gairm-import: object() additional must be none, true, or a schema dict (with a `kind` field); got: " +
+      repr(additional) + ".",
+  )
+  // With `additional`, undeclared required keys are covered by the
+  // additional schema, so the subset check only applies when strict.
+  let unknown = if additional == none {
+    required-keys.filter(k => k not in shape)
+  } else {
+    ()
+  }
   assert(
     unknown.len() == 0,
     message: "gairm-import: object() required-keys references keys not in shape: " +

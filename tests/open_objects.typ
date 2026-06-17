@@ -115,6 +115,34 @@
 #assert(bail-src.contains("open object schemas"))
 #assert(bail-src.contains("must be a schema, true, or false"))
 
+// --- constructor: `additional` validated up front -------------------
+//
+// `object()` rejects anything that isn't `none`, `true`, or a schema
+// dict, so a hand-built schema with e.g. `additional: false` fails
+// at construction instead of crashing inside _validate when `.kind`
+// is read.
+#let kinds-src = read("../internal/kinds.typ")
+#assert(kinds-src.contains("additional must be none, true, or a schema dict"))
+
+// `additional` + required-key-not-in-shape is now allowed — the
+// extra key gets validated by `additional`, so the construction-time
+// subset check is skipped when an additional schema is present.
+#let open-required = object(
+  (:),
+  required-keys: ("id",),
+  additional: str-type,
+)
+#assert.eq(open-required.required-keys, ("id",))
+// And the runtime still flags it missing if absent…
+#let missing = validate((:), schema: open-required)
+#assert.eq(missing.len(), 1)
+#assert(missing.at(0).message.contains("missing required key \"id\""))
+// …and validates the value against `additional` when present.
+#assert.eq(validate((id: "abc"), schema: open-required), ())
+#let wrong-type = validate((id: 1), schema: open-required)
+#assert.eq(wrong-type.len(), 1)
+#assert(wrong-type.at(0).message.contains("expected string"))
+
 // --- error path uses the actual key, not "items" --------------------
 //
 // A pure map of objects: error inside one entry surfaces the real key.

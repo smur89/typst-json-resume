@@ -286,8 +286,12 @@ common case.
 
 ## Building an extension schema
 
-`parse` is strict against the canonical schema by design — unknown keys
-are rejected. Renderers that need their own fields (alta-typst's
+`parse` is strict against declared fields in the canonical schema:
+keys that aren't declared *and* aren't covered by an upstream
+`additionalProperties` clause are rejected. (Upstream JSON Resume
+sets `additionalProperties: true` on every section's items, so extras
+in those positions pass through — see the note in the BYO section.)
+Renderers that need their own fields (alta-typst's
 `preferences`, `labels`, `focusAreas`; numeric language `rating`; publication
 `type` grouping; …) can build a JSON-Resume+ schema with the public
 combinators and pass it to `parse` / `validate` / `coerce` via the
