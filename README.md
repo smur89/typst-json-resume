@@ -476,6 +476,25 @@ Resume bump introduces are covered automatically:
 ```
 <!-- x-release-please-end -->
 
+### JSON Pointer interop
+
+Lens paths and validator error paths are `(seg, seg, ...)` tuples — natural in Typst but they don't directly interoperate with external tooling that speaks [RFC 6901 JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) (editor extensions for schema-aware completion, schema diff tools, JSON Schema documentation generators, …). `path-to-pointer` / `pointer-to-path` cross the boundary:
+
+```typst
+#import "@preview/gairm-import:0.7.x": path-to-pointer, pointer-to-path
+
+#path-to-pointer(("basics", "email"))            // "/basics/email"
+#path-to-pointer(("work", 0, "highlights", 1))   // "/work/0/highlights/1"
+#path-to-pointer(("a/b",))                       // "/a~1b"     — `/` escapes as `~1`
+#path-to-pointer(("~tilde",))                    // "/~0tilde"  — `~` escapes as `~0`
+
+#pointer-to-path("/work/0/highlights/1")         // ("work", 0, "highlights", 1)
+#pointer-to-path("")                             // ()          — whole document
+#pointer-to-path("/")                            // ("",)       — empty-string key at root
+```
+
+Encoding accepts `str` (object key) or `int` (array index) segments; other types panic. Decoding parses tokens matching JSON Pointer's array-index ABNF (`0` | `[1-9][0-9]*`) back to `int`; everything else stays `str`. `pointer-to-path(path-to-pointer(p)) == p` round-trips for any path with unambiguous segment types — the shape lens and validator code emit.
+
 ### Starting from a JSON Schema document
 
 `schema-from-json-schema(parsed-schema)` translates a JSON Schema (draft 7
