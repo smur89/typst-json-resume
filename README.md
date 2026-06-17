@@ -123,25 +123,20 @@ Pass the model into any compatible renderer — e.g. [`altacv`](https://typst.ap
 <!-- Two fences (not one): release-please would otherwise bump altacv:1.1.1 on every gairm release. See https://github.com/typst/packages/pull/5069#discussion_r3420827761 -->
 
 ```typst
-#import "@preview/altacv:1.1.1": alta, palettes
+#import "@preview/altacv:1.1.1": alta
 ```
 
 <!-- x-release-please-start-version -->
 ```typst
 #import "@preview/gairm-import:0.8.0": parse
 
-#alta(
-  parse(path("resume.json")),
-  preferences: (accent: palettes.navy),
-)
+#alta(parse(path("resume.json")))
 ```
 <!-- x-release-please-end -->
 
-`alta(cv, labels: (:), preferences: (:))` takes the JSON-Resume-shaped dict
-positionally; `labels` and `preferences` are optional dicts merged over the
-template defaults. See the
-[altacv README](https://github.com/smur89/alta-typst#readme) for the full
-surface.
+If the renderer expects fields outside the canonical JSON Resume shape, build
+an extension schema with the lens API and pass it as `schema:` — see
+[Building an extension schema](#building-an-extension-schema).
 
 ### Handling validation errors yourself
 
@@ -195,15 +190,6 @@ Root null is rejected: if the entire input document is `null`, `validate`,
 `coerce`, and `parse` panic with
 `gairm-import: input must be a dict, got null.` The null-as-absent policy
 applies to leaf positions inside a document, not to the document itself.
-
-## Scope
-
-The canonical surface — `parse`, `validate`, `coerce` — implements **only**
-the [JSON Resume schema](https://jsonresume.org/schema) and rejects unknown
-fields. Renderer-specific extensions are layered on top by the consuming
-template via the [Advanced](#advanced) APIs below; requests for
-renderer-specific fields in the canonical schema itself will be redirected
-to the relevant template repo.
 
 ## Advanced
 
