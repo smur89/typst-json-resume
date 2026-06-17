@@ -144,6 +144,28 @@
 #assert(src.contains("must be > 0"))
 #assert(src.contains("must be a boolean"))
 
+// --- null-as-absent applies to array constraints --------------------
+//
+// `coerce` drops null elements, so the rendered model loses them.
+// Length / uniqueness constraints have to count the rendered shape,
+// not the raw input, or a min-items: 3 array of (a, null, b) would
+// validate as 3-long but render as 2-long — silently inconsistent.
+
+#let nones-skipped = (kind: "array", elem: str-type, min-items: 2)
+#assert.eq(validate(("a", none, "b"), schema: nones-skipped), ())
+#let too-few-after-nones = validate(("a", none), schema: nones-skipped)
+#assert.eq(too-few-after-nones.len(), 1)
+#assert(too-few-after-nones.at(0).message.contains("got 1"))
+
+// uniqueItems likewise compares non-null entries only — but the
+// duplicate-index report cites the *original* positions so the
+// caller can find them in the source array.
+#let unique-with-nones = (kind: "array", elem: str-type, unique-items: true)
+#assert.eq(validate(("a", none, "b", none), schema: unique-with-nones), ())
+#let dup-with-none = validate(("a", none, "b", "a"), schema: unique-with-nones)
+#assert.eq(dup-with-none.len(), 1)
+#assert(dup-with-none.at(0).message.contains("indices 0 and 3"))
+
 // --- integration with required + nested path -------------------------
 //
 // Constraint errors surface with the full nested path, alongside any

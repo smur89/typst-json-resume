@@ -61,12 +61,17 @@
   errs
 }
 
-// uniqueItems uses pairwise `==`: Typst already compares dicts/arrays
-// deeply, and the schemas this targets don't hit arrays large enough
-// for O(n²) to matter.
+// `none` elements are filtered out: coerce drops them downstream, so
+// counting raw entries would let a min-items: 3 array of (a, null, b)
+// pass even though the rendered model is only 2 long. uniqueItems
+// uses the same filtered view; Typst compares dicts/arrays deeply,
+// and target schemas don't hit arrays large enough for O(n²) to
+// matter. Duplicate-index reports cite the *original* positions so
+// the caller can find them in the source.
 #let _array-constraint-errs(schema, value, path) = {
   let errs = ()
-  let n = value.len()
+  let present = value.enumerate().filter(((_, elem)) => elem != none)
+  let n = present.len()
   let min = schema.at("min-items", default: none)
   if min != none and n < min {
     errs += _err(path, "expected array length ≥ " + str(min) + ", got " + str(n) + ".")
@@ -78,8 +83,10 @@
   if schema.at("unique-items", default: false) {
     for i in range(n) {
       for j in range(i + 1, n) {
-        if value.at(i) == value.at(j) {
-          errs += _err(path, "expected unique items, duplicate at indices " + str(i) + " and " + str(j) + ".")
+        let (orig-i, left) = present.at(i)
+        let (orig-j, right) = present.at(j)
+        if left == right {
+          errs += _err(path, "expected unique items, duplicate at indices " + str(orig-i) + " and " + str(orig-j) + ".")
           return errs
         }
       }
