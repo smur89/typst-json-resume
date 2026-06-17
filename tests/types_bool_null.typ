@@ -5,6 +5,7 @@
   schema-from-json-schema,
   bool-type, null-type,
   str-type, number-type, email-string, object,
+  paths-of-kind,
 )
 
 // --- bool-type --------------------------------------------------------
@@ -60,6 +61,12 @@
   schema-from-json-schema((type: ("string", "null"), format: "email")),
   email-string,
 )
+
+// --- introspection: new kinds register as leaves --------------------
+
+#let mixed = object((flag: bool-type, marker: null-type, name: str-type))
+#assert.eq(paths-of-kind(mixed, "bool"), (("flag",),))
+#assert.eq(paths-of-kind(mixed, "null"), (("marker",),))
 
 // --- translator: multi-non-null union rejected -----------------------
 //
