@@ -47,9 +47,8 @@
   "dependencies", "dependentRequired", "dependentSchemas",
 )
 
-// Constraint values are validated up front so a typo in the source
-// JSON Schema (e.g. `"minLength": "1"`) panics at translate time
-// rather than producing a kind dict the validator can't reason about.
+// Bail at translate time on bad-shape values; better than a kind
+// dict the validator can't reason about.
 #let _require-nonneg-int(js, key) = {
   let v = js.at(key)
   if type(v) != int or v < 0 {

@@ -19,8 +19,7 @@
 
 #let _err(path, msg) = ((path: path, message: msg),)
 
-// Length in clusters (user-perceived chars) — the unit JSON Schema
-// implies but never pins.
+// Clusters, not bytes — JSON Schema talks "length" without pinning.
 #let _string-length-errs(schema, value, path) = {
   let min = schema.at("min-length", default: none)
   let max = schema.at("max-length", default: none)
@@ -61,13 +60,9 @@
   errs
 }
 
-// `none` elements are filtered out: coerce drops them downstream, so
-// counting raw entries would let a min-items: 3 array of (a, null, b)
-// pass even though the rendered model is only 2 long. uniqueItems
-// uses the same filtered view; Typst compares dicts/arrays deeply,
-// and target schemas don't hit arrays large enough for O(n²) to
-// matter. Duplicate-index reports cite the *original* positions so
-// the caller can find them in the source.
+// Filter `none` first — coerce drops them, so raw counts would
+// validate inputs whose rendered model violates min-items. Duplicate
+// reports cite original positions so callers can find them.
 #let _array-constraint-errs(schema, value, path) = {
   let errs = ()
   let present = value.enumerate().filter(((_, elem)) => elem != none)
