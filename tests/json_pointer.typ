@@ -83,7 +83,7 @@
 // Source-level message pins (Typst can't catch panics) — same
 // approach as tests/lens_panic_messages.typ.
 
-#let src = read("../internal/pointers.typ")
+#let src = read("../internal/json-pointer.typ")
 #assert(src.contains("path-to-pointer expected a str or int segment"))
 // Escaped quotes (\") in the source bytes don't round-trip through
 // Typst's string-literal escape processing — match the unescaped

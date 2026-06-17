@@ -4,14 +4,32 @@
 // highlights/1" form external tooling (editor extensions, schema
 // linters, JSON Schema doc generators) expects.
 //
-// Encoding accepts str (object key) or int (array index) segments;
-// other types panic. Decoding parses tokens matching JSON Pointer's
-// array-index ABNF (`0` | `[1-9][0-9]*`) back to int; everything
-// else stays str. This means round-trip is only stable for paths
-// whose segment types are unambiguous — a string segment that
-// looks like an integer (`("work", "0")`) round-trips to `("work",
-// 0)`. Realistic paths from validator / lens code never carry
-// numeric strings, so this isn't a concern in practice.
+// Two addressing schemes share the same encoder:
+//   - Validator error paths: address INTO data (mixed str|int,
+//     with non-negative ints for array indices). Encodes to a real
+//     RFC 6901 JSON Pointer that a data-aware tool can dereference.
+//   - Lens / introspect paths: address INTO a schema (str-only,
+//     with `"items"` for array elements and `"additionalProperties"`
+//     for the additional schema). Encodes to a JSON-Pointer-shaped
+//     string that addresses a schema position — meaningful to JSON
+//     Schema tooling that uses JSON Pointer in `$ref` (e.g.
+//     `#/properties/foo/items`), but NOT a data pointer.
+// The encoder doesn't distinguish; the caller picks the right
+// addressing scheme for the path they have.
+//
+// Encoding accepts str (object key) or int (non-negative array
+// index) segments; other types and negative ints panic. Decoding
+// parses tokens matching JSON Pointer's array-index ABNF (`0` |
+// `[1-9][0-9]*`) back to int; everything else stays str.
+//
+// Round-trip directions are asymmetric:
+//   - pointer → path → pointer is lossless for any well-formed
+//     pointer (the new path's segment types are determined by the
+//     decode regex, and the encoder reproduces the same bytes).
+//   - path → pointer → path is lossless EXCEPT when a str segment
+//     looks like an array index (e.g. `("0",)` decodes back as
+//     `(0,)`). Validator + lens code never emit numeric strings, so
+//     this isn't a concern in practice.
 
 // Order matters: `~1` → `/` first would let an `~1` token round-
 // trip wrong (e.g. `~01` should decode to `~1`, not `/0`). Encode
